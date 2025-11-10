@@ -1,0 +1,1097 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import Header from "../components/header";
+import Slidebar from "../components/slidebar";
+import { checklistAPI } from "../services/api";
+import { toast } from "react-hot-toast";
+
+// Reusable Remark Dropdown Component
+const RemarkDropdown = ({ value, onChange, disabled }) => (
+  <div className="mb-2">
+    <label className="block mb-2 text-sm sm:text-lg font-semibold">Remark</label>
+    <input
+      list="remarks"
+      name="remark"
+      value={value}
+      onChange={onChange}
+      placeholder="Add Remark"
+      className="border p-2 rounded-lg w-full text-sm sm:text-base focus:ring-2 focus:ring-orange-500 outline-none"
+      disabled={disabled}
+    />
+    <datalist id="remarks">
+      <option value="Oil Leak" />
+      <option value="Pulp Leak" />
+      <option value="Gland Leak" />
+      <option value="Pneumatic Leak" />
+      <option value="Mechanical Seal Leak" />
+      <option value="Condensate Leak" />
+      <option value="Steam Leak" />
+      <option value="Belts Loosed" />
+      <option value="Abnormal Vibration" />
+      <option value="Temperature High" />
+      <option value="Abnormal Noise" />
+      <option value="Nut&Bolts Loosed" />
+      <option value="Sealing Water Line Blocked" />
+      <option value="Oil Glass Gauge Uncleared" />
+    </datalist>
+  </div>
+);
+
+const Location3 = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const shift = queryParams.get("shift") || "Day";
+
+  const sectionButtons = ["Bail Conveyor", "Thickners", "Refiners", "Other Machineries"];
+
+  const machineData = {
+    "Bail Conveyor": ["L1101"],
+    Thickners: ["1127", "1148", "1138"],
+    Refiners: ["1141", "1151"],
+    "Other Machineries": [
+      "E1102", "E1103", "E1173", "E1172", "E1112", "E1107", "E1105", "E1106",
+      "E1104", "E1118", "E1115", "E1117", "E1126", "E1131", "E1145", "E1147",
+      "E2107", "E2210", "E2207"
+    ]
+  };
+
+  const defaultFormBailConveyor = {
+    working: "",
+    gearboxTemperature: "",
+    brakeLineCondition: "",
+    chainDrive: "",
+    conveyorCondition: "",
+    cleanliness: "",
+    noise: "",
+    remark: ""
+  };
+
+  const defaultFormThickners = {
+    working: "",
+    drive: "",
+    driven: "",
+    beltcondition: "",
+    temperature: "",
+    oil: "",
+    cleanliness: "",
+    noise: "",
+    remark: ""
+  };
+
+  const defaultFormRefiners = {
+    working: "",
+    temperature: "",
+    oil: "",
+    cleanliness: "",
+    noise: "",
+    remark: ""
+  };
+
+  const defaultFormOthers = {
+    working: "",
+    gearboxTemperature: "",
+    beltCondition: "",
+    cleanliness: "",
+    noise: "",
+    remark: ""
+  };
+
+  const getDefaultForm = (section) => {
+    if (section === "Bail Conveyor") return defaultFormBailConveyor;
+    if (section === "Thickners") return defaultFormThickners;
+    if (section === "Refiners") return defaultFormRefiners;
+    return defaultFormOthers;
+  };
+
+  const [selectedSection, setSelectedSection] = useState("Bail Conveyor");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [currentMachineIndex, setCurrentMachineIndex] = useState(0);
+  const [addedMachines, setAddedMachines] = useState({});
+  const [partiallyFilledMachines, setPartiallyFilledMachines] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState(getDefaultForm("Bail Conveyor"));
+  const [popupMessage, setPopupMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterMode, setFilterMode] = useState("all");
+  const [currentUserId, setCurrentUserId] = useState(JSON.parse(localStorage.getItem('user') || '{}').id || null);
+  const machinesPerPage = 42;
+  const radioLabelStyle = "flex items-center gap-4 font-sans text-lg font-semibold";
+
+  const allMachines = machineData[selectedSection] || [];
+  const filteredMachines = allMachines.filter((machine) => {
+    const matchesSearch = machine.toLowerCase().includes(searchTerm.toLowerCase());
+    if (filterMode === "unfilled") {
+      return matchesSearch && !addedMachines[machine] && !partiallyFilledMachines[machine];
+    }
+    return matchesSearch;
+  });
+
+  const totalPages = Math.ceil(filteredMachines.length / machinesPerPage);
+  const startIndex = (currentPage - 1) * machinesPerPage;
+  const currentMachines = filteredMachines.slice(startIndex, startIndex + machinesPerPage);
+  const addedCurrentSection = Object.keys(addedMachines).filter((m) => allMachines.includes(m)).length;
+  const totalCurrentSection = allMachines.length;
+
+  // Reset state on user change
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const newUserId = user.id || null;
+    if (newUserId !== currentUserId) {
+      setCurrentUserId(newUserId);
+      setAddedMachines({});
+      setPartiallyFilledMachines({});
+      setFormData(getDefaultForm(selectedSection));
+      setCurrentMachineIndex(0);
+      setPopupMessage("");
+      setSearchTerm("");
+      setFilterMode("all");
+      setCurrentPage(1);
+      loadSavedData();
+    }
+  }, [localStorage.getItem('user')]);
+
+  // Reset search, filter, and load data when section changes
+  useEffect(() => {
+    setSearchTerm("");
+    setFilterMode("all");
+    setCurrentPage(1);
+    setFormData(getDefaultForm(selectedSection));
+    setCurrentMachineIndex(0);
+    setPopupMessage("");
+    loadSavedData();
+  }, [selectedSection]);
+
+  const loadSavedData = async () => {
+    setLoading(true);
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = currentUser.id || currentUser.empNumber || null;
+      const response = await checklistAPI.getByLocationAndSubsection("mechanical", "location3", selectedSection);
+      const savedFullyFilled = {};
+      const savedPartiallyFilled = {};
+      response.data.forEach((entry) => {
+        if (entry.status !== "APPROVED" && entry.createdBy === userId) {
+          const formFields = Object.keys(getDefaultForm(selectedSection));
+          const isFullyFilled = formFields.every((f) =>
+            f === "remark" && entry.formData.working === "Working" ? true : entry.formData[f]
+          );
+          if (isFullyFilled) {
+            savedFullyFilled[entry.machineName] = entry;
+          } else if (Object.values(entry.formData).some((value) => value !== "")) {
+            savedPartiallyFilled[entry.machineName] = entry;
+          }
+        }
+      });
+      setAddedMachines(savedFullyFilled);
+      setPartiallyFilledMachines(savedPartiallyFilled);
+    } catch (error) {
+      console.log("No saved data found");
+      setAddedMachines({});
+      setPartiallyFilledMachines({});
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveMachineData = async (machineName, formData, isFullyFilled) => {
+    setLoading(true);
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const checklistEntryPayload = {
+        machineName,
+        section: selectedSection,
+        locationType: "mechanical",
+        locationId: "location3",
+        subsection: selectedSection,
+        shift,
+        technicianName: currentUser.fullName || "Unknown",
+        createdBy: currentUser.id || currentUser.empNumber,
+        formData: { ...formData },
+        status: "PENDING"
+      };
+
+      const existingEntry = addedMachines[machineName] || partiallyFilledMachines[machineName];
+      if (existingEntry && existingEntry.id) {
+        await checklistAPI.update(existingEntry.id, { ...existingEntry, ...checklistEntryPayload });
+        toast.success(`Data ${isFullyFilled ? "updated" : "partially updated"} for ${machineName}`);
+      } else {
+        await checklistAPI.create(checklistEntryPayload);
+        toast.success(`Data ${isFullyFilled ? "saved" : "partially saved"} for ${machineName}`);
+      }
+      await loadSavedData();
+    } catch (error) {
+      toast.error("Failed to save data. Please try again.");
+      console.error("Save error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handleMachineClick = (globalIndex) => {
+    const machineName = allMachines[globalIndex];
+    setCurrentMachineIndex(globalIndex);
+    setFormData(
+      addedMachines[machineName]?.formData ||
+      partiallyFilledMachines[machineName]?.formData ||
+      getDefaultForm(selectedSection)
+    );
+    setShowPopup(true);
+    setPopupMessage("");
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (["temperature", "gearboxTemperature", "drive", "driven"].includes(name)) {
+      if (value === "" || /^[0-9]*\.?[0-9]*$/.test(value)) {
+        setFormData({ ...formData, [name]: value });
+      }
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleClose = async () => {
+    const machineName = allMachines[currentMachineIndex];
+    const formFields = Object.keys(getDefaultForm(selectedSection));
+    const hasData = Object.values(formData).some((value) => value !== "");
+    const isFullyFilled = formFields.every((f) =>
+      f === "remark" && formData.working === "Working" ? true : formData[f]
+    );
+
+    if (hasData) {
+      if (isFullyFilled && formData.working === "Not Working" && !formData.remark) {
+        toast.error("Remark is required when 'Not Working'");
+        return;
+      }
+      await saveMachineData(machineName, formData, isFullyFilled);
+      setPopupMessage(`Data ${isFullyFilled ? "saved" : "partially saved"} for ${machineName}`);
+    }
+    setShowPopup(false);
+  };
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  const handlePrevMachine = async () => {
+    const machineName = allMachines[currentMachineIndex];
+    const formFields = Object.keys(getDefaultForm(selectedSection));
+    const hasData = Object.values(formData).some((value) => value !== "");
+    const isFullyFilled = formFields.every((f) =>
+      f === "remark" && formData.working === "Working" ? true : formData[f]
+    );
+
+    if (hasData) {
+      if (isFullyFilled && formData.working === "Not Working" && !formData.remark) {
+        toast.error("Remark is required when 'Not Working'");
+        return;
+      }
+      await saveMachineData(machineName, formData, isFullyFilled);
+      setPopupMessage(`Data ${isFullyFilled ? "saved" : "partially saved"} for ${machineName}`);
+    }
+
+    const prevIndex = currentMachineIndex > 0 ? currentMachineIndex - 1 : currentMachineIndex;
+    setCurrentMachineIndex(prevIndex);
+    const prevMachineName = allMachines[prevIndex];
+    setFormData(
+      addedMachines[prevMachineName]?.formData ||
+      partiallyFilledMachines[prevMachineName]?.formData ||
+      getDefaultForm(selectedSection)
+    );
+  };
+
+  const handleNextMachine = async () => {
+    const machineName = allMachines[currentMachineIndex];
+    const formFields = Object.keys(getDefaultForm(selectedSection));
+    const hasData = Object.values(formData).some((value) => value !== "");
+    const isFullyFilled = formFields.every((f) =>
+      f === "remark" && formData.working === "Working" ? true : formData[f]
+    );
+
+    if (hasData) {
+      if (isFullyFilled && formData.working === "Not Working" && !formData.remark) {
+        toast.error("Remark is required when 'Not Working'");
+        return;
+      }
+      await saveMachineData(machineName, formData, isFullyFilled);
+      setPopupMessage(`Data ${isFullyFilled ? "saved" : "partially saved"} for ${machineName}`);
+    }
+
+    const nextIndex = currentMachineIndex < allMachines.length - 1 ? currentMachineIndex + 1 : currentMachineIndex;
+    setCurrentMachineIndex(nextIndex);
+    const nextMachineName = allMachines[nextIndex];
+    setFormData(
+      addedMachines[nextMachineName]?.formData ||
+      partiallyFilledMachines[nextMachineName]?.formData ||
+      getDefaultForm(selectedSection)
+    );
+  };
+
+  const handleSaveInPopup = async () => {
+    const machineName = allMachines[currentMachineIndex];
+    if (!formData.working) {
+      toast.error("Please fill in all fields before adding data!");
+      return;
+    }
+
+    if (formData.working === "Not Working" && !formData.remark) {
+      toast.error("Remark is required when 'Not Working'");
+      return;
+    }
+
+    if (formData.working === "Working") {
+      const requiredFields = Object.keys(getDefaultForm(selectedSection)).filter((f) => f !== "remark");
+      for (let field of requiredFields) {
+        if (!formData[field]) {
+          toast.error(`Please fill in ${field} before adding data!`);
+          return;
+        }
+      }
+    } else if (formData.working === "Not Working") {
+      const fields = Object.keys(getDefaultForm(selectedSection));
+      const clearedData = { ...formData };
+      fields.forEach((f) => {
+        if (f !== "working" && f !== "remark") clearedData[f] = "";
+      });
+      setFormData(clearedData);
+    }
+
+    await saveMachineData(machineName, formData, true);
+    setPopupMessage(
+      `Data saved for ${machineName}. Next Machine: ${
+        allMachines[currentMachineIndex + 1] || "End of Section"
+      }`
+    );
+
+    if (currentMachineIndex < allMachines.length - 1) {
+      const nextIndex = currentMachineIndex + 1;
+      const nextMachineName = allMachines[nextIndex];
+      const response = await checklistAPI.getByLocationAndSubsection("mechanical", "location3", selectedSection);
+      const nextEntry = response.data.find((e) => e.machineName === nextMachineName && e.status !== "APPROVED");
+      setFormData(nextEntry?.formData || getDefaultForm(selectedSection));
+      setCurrentMachineIndex(nextIndex);
+    }
+
+    const allFilled = Object.keys(addedMachines).filter((m) => allMachines.includes(m)).length === allMachines.length;
+    if (allFilled) {
+      setShowPopup(false);
+      setPopupMessage("");
+    }
+  };
+
+  const handleSubmit = () => {
+    setShowConfirmPopup(true);
+  };
+
+  const confirmSubmit = async () => {
+    setLoading(true);
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = currentUser.id || currentUser.empNumber || null;
+      const response = await checklistAPI.getByLocationAndSubsection("mechanical", "location3", selectedSection);
+      const deletePromises = response.data
+        .filter((entry) => entry.createdBy === userId && entry.status !== "APPROVED")
+        .map((entry) => checklistAPI.delete(entry.id));
+      await Promise.all(deletePromises);
+
+      setAddedMachines({});
+      setPartiallyFilledMachines({});
+      setFormData(getDefaultForm(selectedSection));
+      setCurrentMachineIndex(0);
+      setPopupMessage("");
+      setSearchTerm("");
+      setFilterMode("all");
+      setCurrentPage(1);
+      await loadSavedData();
+
+      toast.success("Section submitted for approval!");
+      navigate("/location");
+    } catch (error) {
+      toast.error("Failed to submit. Please try again.");
+      console.error("Submit error:", error);
+    } finally {
+      setLoading(false);
+      setShowConfirmPopup(false);
+    }
+  };
+
+  const handleCancelSubmit = () => {
+    setShowConfirmPopup(false);
+  };
+
+  const handleSave = async () => {
+    toast.success("Progress saved successfully!");
+  };
+
+  const handleEdit = () => {
+    const addedMachineKeys = Object.keys(addedMachines).filter((m) => allMachines.includes(m));
+    const partiallyFilledMachineKeys = Object.keys(partiallyFilledMachines).filter((m) => allMachines.includes(m));
+    const allMachineKeys = [...addedMachineKeys, ...partiallyFilledMachineKeys];
+    if (allMachineKeys.length === 0) {
+      toast.error("No machines added to edit. Please add data first.");
+      return;
+    }
+    const lastMachine = allMachineKeys[allMachineKeys.length - 1];
+    const index = allMachines.indexOf(lastMachine);
+    setCurrentMachineIndex(index);
+    setFormData(
+      addedMachines[lastMachine]?.formData ||
+      partiallyFilledMachines[lastMachine]?.formData ||
+      getDefaultForm(selectedSection)
+    );
+    setShowPopup(true);
+    setPopupMessage(`Editing data for ${lastMachine}`);
+  };
+
+  if (loading && Object.keys(addedMachines).length === 0 && Object.keys(partiallyFilledMachines).length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <Header />
+      <div className="flex flex-1">
+        <div className="w-60 bg-white shadow-md">
+          <Slidebar />
+        </div>
+        <div className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-4 py-6">
+            <div className="flex flex-wrap gap-6 mb-10">
+              {sectionButtons.map((section, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setSelectedSection(section);
+                    setCurrentPage(1);
+                    setFormData(getDefaultForm(section));
+                    setCurrentMachineIndex(0);
+                    setPopupMessage("");
+                  }}
+                  disabled={loading}
+                  className={`min-w-[120px] sm:min-w-[140px] px-6 py-2 ${
+                    selectedSection === section
+                      ? "bg-[#cc3300] scale-105 transform border-2 border-black"
+                      : "bg-gradient-to-r from-[#ff6600] to-[#cc3300]"
+                  } text-white rounded-2xl font-bold cursor-pointer text-sm sm:text-base shadow-md hover:opacity-90 text-center`}
+                >
+                  {section}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-6 sm:mb-10 justify-between">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
+                <input
+                  type="text"
+                  placeholder="Search machines..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 sm:px-4 py-2 border border-black rounded-md text-xs sm:text-base w-full sm:w-48"
+                />
+                <button
+                  onClick={() => {
+                    setFilterMode(filterMode === "all" ? "unfilled" : "all");
+                    setCurrentPage(1);
+                  }}
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 border border-black font-semibold rounded-md text-xs sm:text-base hover:bg-gray-200"
+                >
+                  Filters: {filterMode === "all" ? "All" : "Unfilled Only"}
+                </button>
+                <button
+                  onClick={() => navigate("/location")}
+                  className="px-4 sm:px-6 py-2 bg-gradient-to-r from-[#ff6600] to-[#cc3300] text-white rounded-2xl font-bold cursor-pointer text-xs sm:text-base hover:from-[#cc3300] hover:to-[#ff6600] transition-colors"
+                >
+                  Exit
+                </button>
+              </div>
+              <div className="text-sm sm:text-base font-semibold">
+                Filled: {addedCurrentSection} / {totalCurrentSection}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3 sm:gap-6 mb-8">
+              {currentMachines.map((machine, index) => {
+                const globalIndex = allMachines.indexOf(machine);
+                const isAdded = addedMachines[machine];
+                const isPartiallyFilled = partiallyFilledMachines[machine];
+                return (
+                  <div key={index} className="relative">
+                    <button
+                      onClick={() => handleMachineClick(globalIndex)}
+                      disabled={loading}
+                      className={`px-4 sm:px-6 py-2 border rounded-[10px] text-xs sm:text-base font-semibold text-center shadow-md w-full ${
+                        isAdded ? "bg-orange-400 hover:bg-orange-500" : "bg-white hover:bg-gray-100"
+                      }`}
+                      style={{ borderColor: "#F26223" }}
+                    >
+                      {machine}
+                    </button>
+                    {isPartiallyFilled && !isAdded && (
+                      <div
+                        className="absolute top-0 right-0 w-3 h-3 bg-red-500"
+                        style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
+                        title="Partially filled"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="bg-gray-100 p-4 shadow-inner flex flex-col items-center gap-4 sticky bottom-0 z-10">
+            <div className="flex justify-between items-center w-full max-w-4xl">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1 || loading}
+                className="px-4 sm:px-6 py-2 bg-[#8F8D93] text-white font-bold cursor-pointer text-sm sm:text-base disabled:opacity-60"
+              >
+                &lt; Previous
+              </button>
+              <div className="flex gap-4">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    disabled={loading}
+                    className={`px-4 py-2 font-semibold ${
+                      page === currentPage ? "border-2 border-black" : ""
+                    }`}
+                    style={{ borderRadius: 0, background: "transparent", cursor: "pointer" }}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages || loading}
+                className="px-4 sm:px-6 py-2 bg-[#8F8D93] text-white font-bold cursor-pointer text-sm sm:text-base disabled:opacity-60"
+              >
+                Next &gt;
+              </button>
+            </div>
+            <div className="flex gap-8 justify-center w-full max-w-4xl mt-2">
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                className="px-6 sm:px-8 py-2 bg-gradient-to-r from-[#ff6600] to-[#cc3300] text-white rounded-2xl font-bold cursor-pointer text-sm sm:text-base hover:from-[#cc3300] hover:to-[#ff6600] transition-colors"
+              >
+                {loading ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={handleEdit}
+                disabled={loading}
+                className={`px-6 sm:px-8 py-2 bg-gradient-to-r from-[#ff6600] to-[#cc3300] text-white rounded-2xl font-bold cursor-pointer text-sm sm:text-base hover:from-[#cc3300] hover:to-[#ff6600] transition-colors ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                Edit
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className={`px-6 py-2 rounded-2xl font-bold text-white ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-[#ff6600] to-[#cc3300] hover:from-[#cc3300] hover:to-[#ff6600]"
+                }`}
+              >
+                {loading ? "Submitting..." : "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {showPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={handleBackdropClick}>
+          <div className="rounded-lg p-4 sm:p-6 w-full max-w-sm sm:max-w-md relative bg-white max-h-[90vh] flex flex-col shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="relative mb-4 flex-shrink-0">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center mx-auto">
+                {allMachines[currentMachineIndex]}
+              </h2>
+              {popupMessage && (
+                <div className="mb-4 text-green-600 font-semibold text-center text-sm sm:text-base">
+                  {popupMessage}
+                </div>
+              )}
+              <button
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold hover:bg-red-600 transition-colors shadow-md"
+                onClick={handleClose}
+                disabled={loading}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-1">
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row justify-between mb-3 gap-2 sm:gap-0">
+                  {["Working", "Not Working"].map((val) => (
+                    <label key={val} className={`${radioLabelStyle} flex-1 text-center`}>
+                      <input
+                        type="radio"
+                        name="working"
+                        value={val}
+                        checked={formData.working === val}
+                        onChange={handleChange}
+                        disabled={loading}
+                      />
+                      {val}
+                    </label>
+                  ))}
+                </div>
+                {selectedSection === "Bail Conveyor" && (
+                  <>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Gearbox Temperature (°C)</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="gearboxTemperature"
+                          value={formData.gearboxTemperature}
+                          onChange={handleChange}
+                          className="border p-2 rounded w-full pr-8 text-sm sm:text-base focus:ring-2 focus:ring-orange-500"
+                          disabled={loading}
+                        />
+                        <span className="absolute right-2 top-2.5 text-gray-500 text-xs">°C</span>
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Brake Line Condition</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Ok", "Loose"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="brakeLineCondition"
+                              value={val}
+                              checked={formData.brakeLineCondition === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Chain Drive Condition</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Ok", "Loose"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="chainDrive"
+                              value={val}
+                              checked={formData.chainDrive === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Conveyor Condition</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Ok", "Loose"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="conveyorCondition"
+                              value={val}
+                              checked={formData.conveyorCondition === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Cleanliness</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Good", "Normal", "Bad"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="cleanliness"
+                              value={val}
+                              checked={formData.cleanliness === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Noise</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Good", "Normal", "Bad"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="noise"
+                              value={val}
+                              checked={formData.noise === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <RemarkDropdown value={formData.remark} onChange={handleChange} disabled={loading} />
+                  </>
+                )}
+                {selectedSection === "Thickners" && (
+                  <>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Oil Level / Greasing</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["High", "Moderate", "Low"].map((level) => (
+                          <label key={level} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="oil"
+                              value={level}
+                              checked={formData.oil === level}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {level}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Gearbox Temperature (°C)</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="temperature"
+                          value={formData.temperature}
+                          onChange={handleChange}
+                          className="border p-2 rounded w-full pr-8 text-sm sm:text-base focus:ring-2 focus:ring-orange-500"
+                          disabled={loading}
+                        />
+                        <span className="absolute right-2 top-2.5 text-gray-500 text-xs">°C</span>
+                      </div>
+                    </div>
+                    <div className="bg-[#F2F3F4D9] mb-3 p-2 rounded">
+                      <h3 className="block mb-1 font-sans text-base sm:text-lg font-semibold text-center">
+                        Bearing Temperature (°C)
+                      </h3>
+                      <div className="mb-3">
+                        <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Drive</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="drive"
+                            value={formData.drive}
+                            onChange={handleChange}
+                            className="w-full border border-black-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 text-center pr-8 text-sm sm:text-base"
+                            disabled={loading}
+                          />
+                          <span className="absolute right-2 top-2.5 text-gray-500 text-xs">°C</span>
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Non Drive</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="driven"
+                            value={formData.driven}
+                            onChange={handleChange}
+                            className="w-full border border-black-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 text-center pr-8 text-sm sm:text-base"
+                            disabled={loading}
+                          />
+                          <span className="absolute right-2 top-2.5 text-gray-500 text-xs">°C</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Belt Condition</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Ok", "Loose", "Damage"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="beltcondition"
+                              value={val}
+                              checked={formData.beltcondition === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            <span className="text-sm">{val}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Cleanliness</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Good", "Normal", "Bad"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="cleanliness"
+                              value={val}
+                              checked={formData.cleanliness === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Noise</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Good", "Normal", "Bad"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="noise"
+                              value={val}
+                              checked={formData.noise === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <RemarkDropdown value={formData.remark} onChange={handleChange} disabled={loading} />
+                  </>
+                )}
+                {selectedSection === "Refiners" && (
+                  <>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Oil Level / Greasing</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["High", "Moderate", "Low"].map((level) => (
+                          <label key={level} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="oil"
+                              value={level}
+                              checked={formData.oil === level}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {level}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Temperature (°C)</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="temperature"
+                          value={formData.temperature}
+                          onChange={handleChange}
+                          className="border p-2 rounded w-full pr-8 text-sm sm:text-base focus:ring-2 focus:ring-orange-500"
+                          disabled={loading}
+                        />
+                        <span className="absolute right-2 top-2.5 text-gray-500 text-xs">°C</span>
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Cleanliness</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Good", "Normal", "Bad"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="cleanliness"
+                              value={val}
+                              checked={formData.cleanliness === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Noise</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Good", "Normal", "Bad"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="noise"
+                              value={val}
+                              checked={formData.noise === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <RemarkDropdown value={formData.remark} onChange={handleChange} disabled={loading} />
+                  </>
+                )}
+                {selectedSection === "Other Machineries" && (
+                  <>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Bearing Temperature (°C)</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="gearboxTemperature"
+                          value={formData.gearboxTemperature}
+                          onChange={handleChange}
+                          className="border p-2 rounded w-full pr-8 text-sm sm:text-base focus:ring-2 focus:ring-orange-500"
+                          disabled={loading}
+                        />
+                        <span className="absolute right-2 top-2.5 text-gray-500 text-xs">°C</span>
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Belt Condition</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Ok", "Loose", "Damage"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="beltCondition"
+                              value={val}
+                              checked={formData.beltCondition === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Cleanliness</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Good", "Normal", "Bad"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="cleanliness"
+                              value={val}
+                              checked={formData.cleanliness === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mb-3">
+                      <label className="block mb-1 font-sans text-base sm:text-lg font-semibold">Noise</label>
+                      <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
+                        {["Good", "Normal", "Bad"].map((val) => (
+                          <label key={val} className={`${radioLabelStyle} flex-1 min-w-[70px] text-center`}>
+                            <input
+                              type="radio"
+                              name="noise"
+                              value={val}
+                              checked={formData.noise === val}
+                              onChange={handleChange}
+                              disabled={loading}
+                            />
+                            {val}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <RemarkDropdown value={formData.remark} onChange={handleChange} disabled={loading} />
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="flex-shrink-0 mt-4 pt-2 border-t border-gray-200">
+              <button
+                className="w-full py-2 bg-gradient-to-r from-[#ff6600] to-[#cc3300] text-white font-bold rounded-lg mb-3 hover:from-[#cc3300] hover:to-[#ff6600] text-sm sm:text-base disabled:opacity-60 transition-opacity"
+                onClick={handleSaveInPopup}
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save & Next"}
+              </button>
+              <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4">
+                <button
+                  className="flex-1 py-2 bg-gray-400 text-white font-bold rounded-lg text-sm sm:text-base hover:bg-gray-500 disabled:opacity-50 transition-colors"
+                  onClick={handlePrevMachine}
+                  disabled={loading || currentMachineIndex === 0}
+                >
+                  &lt; Previous
+                </button>
+                <button
+                  className="flex-1 py-2 bg-gray-400 text-white font-bold rounded-lg text-sm sm:text-base hover:bg-gray-500 disabled:opacity-50 transition-colors"
+                  onClick={handleNextMachine}
+                  disabled={loading || currentMachineIndex === allMachines.length - 1}
+                >
+                  Next &gt;
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showConfirmPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-2" onClick={() => setShowConfirmPopup(false)}>
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-sm sm:max-w-md flex flex-col shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <h2 className="text-lg sm:text-xl font-bold">Confirm Submission</h2>
+              <p className="text-sm sm:text-base mt-2">Are you sure to submit?</p>
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4">
+              <button
+                className="flex-1 py-2 bg-gradient-to-r from-[#ff6600] to-[#cc3300] text-white font-bold rounded-lg text-sm sm:text-base hover:from-[#cc3300] hover:to-[#ff6600] disabled:opacity-50"
+                onClick={confirmSubmit}
+                disabled={loading}
+              >
+                OK
+              </button>
+              <button
+                className="flex-1 py-2 bg-gray-400 text-white font-bold rounded-lg text-sm sm:text-base hover:bg-gray-500 disabled:opacity-50"
+                onClick={handleCancelSubmit}
+                disabled={loading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Location3;

@@ -1,0 +1,80 @@
+.dashboard-wrapper {
+  background-color: #f0fff0; /* light green background */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hero Section */
+.dashboard-header {
+  background: linear-gradient(135deg, #2e7d32, #66bb6a);
+  color: white;
+  text-align: center;
+  padding: 60px 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+
+.dashboard-header p {
+  font-size: 1.2rem;
+}
+
+/* Cards Section */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  padding: 40px;
+  flex-grow: 1;
+}
+
+.card {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card h2 {
+  color: #2e7d32;
+  margin-bottom: 15px;
+}
+
+.card p {
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 20px;
+}
+
+.card button {
+  background: #2e7d32;
+  color: white;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.card button:hover {
+  background: #1b5e20;
+}
+
+/* Hover Effect */
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+/* Different colors per feature (optional accent) */
+.add-job { border-top: 6px solid #43a047; }
+.see-jobs { border-top: 6px solid #1b5e20; }
+.applied-cv { border-top: 6px solid #66bb6a; }
+.about { border-top: 6px solid #81c784; }

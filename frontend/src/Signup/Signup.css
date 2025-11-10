@@ -1,0 +1,105 @@
+/* ===== Page Layout ===== */
+.signup-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f5f7fa;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ===== Signup Card ===== */
+.signup-box {
+  background-color: white;
+  padding: 3rem 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 420px; /* slightly wider for better layout */
+  text-align: center;
+}
+
+/* ===== Headings ===== */
+.welcome-text {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== Form Structure ===== */
+.form-group {
+  text-align: left;
+  margin-bottom: 1.2rem;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+/* ===== Inputs ===== */
+.input-field {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input-field:focus {
+  border-color: #00c897;
+  outline: none;
+}
+
+/* ===== Button ===== */
+.btn1 {
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.signupform-btn {
+  background: #00c897;
+  color: white;
+}
+
+.signupform-btn:hover {
+  background: #00a97e;
+}
+
+/* ===== Login text ===== */
+.loginform-text {
+  text-align: center;
+  margin-top: 20px;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.loginform-link {
+  color: #00c897;
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.loginform-link:hover {
+  text-decoration: underline;
+}

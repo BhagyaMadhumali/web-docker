@@ -1,0 +1,122 @@
+.signup-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f4f6f8;
+}
+
+.signup-box {
+  background: #fff;
+  padding: 40px 50px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 380px;
+  text-align: center;
+}
+
+.welcome-text {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.form-group {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.input-label {
+  display: block;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border 0.3s ease;
+}
+
+.input-field:focus {
+  border-color: #00c897;
+  outline: none;
+}
+
+/* === Role selection buttons === */
+.role-options {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 8px;
+  border: 2px solid #ccc;
+  background-color: #f8f8f8;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.role-btn:hover {
+  border-color: #00c897;
+  background-color: #e6fff7;
+}
+
+.role-btn.selected {
+  background-color: #00c897;
+  border-color: #00a97e;
+  color: white;
+}
+
+.btn2 {
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.primary2-btn {
+  background: #00c897;
+  color: white;
+}
+
+.primary2-btn:hover {
+  background: #00a97e;
+}
+
+.signupform2-text {
+  margin-top: 20px;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.signupform2-link {
+  color: #00c897;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.signupform2-link:hover {
+  text-decoration: underline;
+}

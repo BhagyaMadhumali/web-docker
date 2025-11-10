@@ -1,0 +1,14 @@
+# Node modules and logs
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files
+.env
+
+# Git files
+.git
+.gitignore
+
+# Dockerfile itself (optional)
+Dockerfile

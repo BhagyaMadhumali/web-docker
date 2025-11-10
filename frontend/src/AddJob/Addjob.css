@@ -1,0 +1,70 @@
+.addjob-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f7f9f9;
+  min-height: 100vh;
+  padding-top: 100px; /* navbar space */
+}
+
+.addjob-card {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+}
+
+.addjob-card h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #00c897;
+}
+
+.addjob-form .form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.addjob-form label {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.addjob-form input,
+.addjob-form select,
+.addjob-form textarea {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: 0.2s;
+  font-size: 1rem;
+}
+
+.addjob-form input:focus,
+.addjob-form select:focus,
+.addjob-form textarea:focus {
+  border-color: #00c897;
+  box-shadow: 0 0 5px rgba(0, 200, 151, 0.3);
+}
+
+.btn-submit {
+  background-color: #00c897;
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-submit:hover {
+  background-color: #00a97e;
+}
