@@ -6,7 +6,6 @@ pipeline {
         FRONTEND_IMAGE = "my-frontend-image"
         BACKEND_IMAGE = "my-backend-image"
         DOCKER_HUB_USER = "bhagya122"
-        DOCKER_HUB_PASS = credentials('docker-hub-password') // Jenkins Credential ID
     }
 
     stages {
@@ -33,20 +32,25 @@ pipeline {
 
         stage('Push Docker Images') {
             steps {
-                echo "Logging into Docker Hub..."
-                sh "echo ${DOCKER_HUB_PASS} | docker login -u ${DOCKER_HUB_USER} --password-stdin"
-                
-                echo "Tagging frontend image..."
-                sh "docker tag ${FRONTEND_IMAGE}:latest ${DOCKER_HUB_USER}/${FRONTEND_IMAGE}:latest"
-                
-                echo "Tagging backend image..."
-                sh "docker tag ${BACKEND_IMAGE}:latest ${DOCKER_HUB_USER}/${BACKEND_IMAGE}:latest"
-                
-                echo "Pushing frontend image to Docker Hub..."
-                sh "docker push ${DOCKER_HUB_USER}/${FRONTEND_IMAGE}:latest"
-                
-                echo "Pushing backend image to Docker Hub..."
-                sh "docker push ${DOCKER_HUB_USER}/${BACKEND_IMAGE}:latest"
+                // Use withCredentials to safely handle Docker Hub password/token
+                withCredentials([string(credentialsId: 'docker-hub-password', variable: 'DOCKER_HUB_PASS')]) {
+                    echo "Logging into Docker Hub..."
+                    sh """
+                        echo \$DOCKER_HUB_PASS | docker login -u ${DOCKER_HUB_USER} --password-stdin
+                        
+                        echo "Tagging frontend image..."
+                        docker tag ${FRONTEND_IMAGE}:latest ${DOCKER_HUB_USER}/${FRONTEND_IMAGE}:latest
+                        
+                        echo "Tagging backend image..."
+                        docker tag ${BACKEND_IMAGE}:latest ${DOCKER_HUB_USER}/${BACKEND_IMAGE}:latest
+                        
+                        echo "Pushing frontend image..."
+                        docker push ${DOCKER_HUB_USER}/${FRONTEND_IMAGE}:latest
+                        
+                        echo "Pushing backend image..."
+                        docker push ${DOCKER_HUB_USER}/${BACKEND_IMAGE}:latest
+                    """
+                }
             }
         }
 
