@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_DIR = "//mnt/d/MyApp2"
+        PROJECT_DIR = "/mnt/d/MyApp2"
         FRONTEND_IMAGE = "my-frontend-image"
         BACKEND_IMAGE = "my-backend-image"
         DOCKER_HUB_USER = "bhagya122"
