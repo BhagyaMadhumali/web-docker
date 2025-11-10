@@ -3,7 +3,25 @@
 /* Main container */
 .jobseeker-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #e2e8f0;
+  padding-top: 80px; /* Add padding to prevent content from hiding behind fixed header */
+}
+
+/* Grid layout */
+.job-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+/* JobSeeker.css */
+
+/* Main container */
+.jobseeker-container {
+  min-height: 100vh;
+  background: #e2e8f0;
   padding-top: 80px; /* Add padding to prevent content from hiding behind fixed header */
 }
 
@@ -30,7 +48,297 @@
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
   position: relative;
   overflow: hidden;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #00c897;
+}
+
+.job-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 200, 151, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.job-box:hover::before {
+  left: 100%;
+}
+
+.job-box:hover {
+  transform: translateY(-8px);
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 200, 151, 0.15),
+    0 10px 10px -5px rgba(0, 200, 151, 0.08);
+  border-left: 4px solid #009e7a;
+}
+
+/* Job title */
+.job-box h3 {
+  color: #1a202c;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  line-height: 1.3;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
+}
+
+/* Job details */
+.job-box p {
+  color: #4a5568;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+}
+
+.job-box strong {
+  color: #2d3748;
+  font-weight: 600;
+  min-width: 80px;
+  margin-right: 8px;
+}
+
+/* Category badge effect */
+.job-box p:first-of-type {
+  background: linear-gradient(135deg, #00c897, #009e7a);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.job-box p:first-of-type strong {
+  color: white;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-right: 6px;
+}
+
+/* Ensure header doesn't overlap content */
+.jobseeker-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 200, 151, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .jobseeker-container {
+    padding-top: 70px; /* Adjust for mobile header */
+  }
+  
+  .job-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px 15px;
+  }
+  
+  .job-box {
+    padding: 20px;
+  }
+  
+  .job-box h3 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .jobseeker-container {
+    padding-top: 60px; /* Further adjust for very small screens */
+  }
+  
+  .job-grid {
+    padding: 15px 10px;
+  }
+  
+  .job-box {
+    padding: 18px;
+  }
+  
+  .job-box p {
+    font-size: 0.9rem;
+  }
+}
+
+/* Loading state animation */
+.job-grid:empty::before {
+  content: 'Loading jobs...';
+  display: block;
+  text-align: center;
+  color: white;
+  font-size: 1.2rem;
+  padding: 40px;
+  grid-column: 1 / -1;
+}
+
+/* Empty state */
+.no-jobs-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: white;
+  font-size: 1.2rem;
+  padding: 60px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  margin: 20px;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus state for accessibility */
+.job-box:focus {
+  outline: 3px solid #00c897;
+  outline-offset: 2px;
+}
+
+/* Animation for card entrance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.job-box {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Stagger animation for multiple cards */
+.job-box:nth-child(1) { animation-delay: 0.1s; }
+.job-box:nth-child(2) { animation-delay: 0.2s; }
+.job-box:nth-child(3) { animation-delay: 0.3s; }
+.job-box:nth-child(4) { animation-delay: 0.4s; }
+.job-box:nth-child(5) { animation-delay: 0.5s; }
+.job-box:nth-child(6) { animation-delay: 0.6s; }
+
+/* Gradient background animation */
+.jobseeker-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(-45deg, #00c897, #009e7a, #00c897, #009e7a);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+  z-index: -1;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Scroll margin for better navigation */
+.job-box {
+  scroll-margin-top: 100px;
+}
+
+/* Three boxes per row on larger screens */
+@media (min-width: 1200px) {
+  .job-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Two boxes per row on medium screens */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .job-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Ensure proper spacing and visibility */
+.jobseeker-main-content {
+  margin-top: 0;
+  width: 100%;
+}
+
+/* Header spacing fix */
+.jobseeker-header + .job-grid {
+  margin-top: 0;
+}
+
+/* Additional green theme enhancements */
+.job-box:hover .job-box h3 {
+  color: #00c897;
+}
+
+/* Button styles using the theme color */
+.theme-button {
+  background: linear-gradient(135deg, #00c897, #009e7a);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.theme-button:hover {
+  background: linear-gradient(135deg, #009e7a, #007a5c);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 200, 151, 0.3);
+}
+
+/* Text colors using theme */
+.theme-text {
+  color: #00c897;
+}
+
+.theme-bg {
+  background-color: #00c897;
+}
+
+/* Loading animation with theme color */
+.loading-spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #00c897;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* Job card styling */
+.job-box {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  border: none;
+  padding: 25px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+  border-left: 4px solid rgba(0, 200, 151, 0.3);
 }
 
 .job-box::before {
@@ -53,7 +361,7 @@
   box-shadow: 
     0 20px 25px -5px rgba(0, 0, 0, 0.15),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border-left: 4px solid #764ba2;
+  border-left: 4px solid rgba(0, 200, 151, 0.3);
 }
 
 /* Job title */
@@ -86,7 +394,7 @@
 
 /* Category badge effect */
 .job-box p:first-of-type {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #00c897 0%, #009e7a 100%);
   color: white;
   padding: 8px 12px;
   border-radius: 20px;
@@ -184,7 +492,7 @@ html {
 
 /* Focus state for accessibility */
 .job-box:focus {
-  outline: 3px solid #667eea;
+  outline: 3px solid rgba(0, 200, 151, 0.3);
   outline-offset: 2px;
 }
 
@@ -220,7 +528,7 @@ html {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(-45deg, #667eea, #764ba2, #667eea, #764ba2);
+  background: linear-gradient(-45deg, #00c897, #009e7a, #00c897, #009e7a);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   z-index: -1;
@@ -235,4 +543,29 @@ html {
 /* Scroll margin for better navigation */
 .job-box {
   scroll-margin-top: 100px;
+}
+
+/* Three boxes per row on larger screens */
+@media (min-width: 1200px) {
+  .job-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Two boxes per row on medium screens */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .job-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Ensure proper spacing and visibility */
+.jobseeker-main-content {
+  margin-top: 80px;
+  width: 100%;
+}
+
+/* Header spacing fix */
+.jobseeker-header + .job-grid {
+  margin-top: 0;
 }

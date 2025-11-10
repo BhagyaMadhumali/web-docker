@@ -21,21 +21,29 @@ const JobSeeker = () => {
   }, []);
 
   return (
-    <div>
+    <div className="jobseeker-container">
       <Jobseekerheader />
-      <div className="job-grid">
-        {jobs.map((job) => (
-          <div
-            className="job-box"
-            key={job._id}
-            onClick={() => navigate(`/job/${job._id}`)}
-          >
-            <h3>{job.title}</h3>
-            <p><strong>Category:</strong> {job.category}</p>
-            <p><strong>Job Type:</strong> {job.jobType}</p>
-            <p><strong>Location:</strong> {job.location}</p>
-          </div>
-        ))}
+      <div className="jobseeker-main-content">
+        <div className="job-grid">
+          {jobs.length === 0 ? (
+            <div className="no-jobs-message">
+              No jobs available at the moment
+            </div>
+          ) : (
+            jobs.map((job) => (
+              <div
+                className="job-box"
+                key={job._id}
+                onClick={() => navigate(`/job/${job._id}`)}
+              >
+                <h3>{job.title}</h3>
+                <p><strong>Category:</strong> {job.category}</p>
+                <p><strong>Job Type:</strong> {job.jobType}</p>
+                <p><strong>Location:</strong> {job.location}</p>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

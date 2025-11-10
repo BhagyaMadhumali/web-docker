@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "./employer.css";
 import axios from "axios";
+import Employersidebar from "../employersidebar/employersidebar";
+import Employerheader from "../employerheader/employerheader";
 
 const employerData = {
   name: "John Doe",
@@ -40,7 +42,7 @@ const Employer = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token"); // JWT from login
+      const token = localStorage.getItem("token");
       const res = await axios.post("http://localhost:4000/api/jobs", jobData, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -67,35 +69,10 @@ const Employer = () => {
 
   return (
     <div className="dashboard-container">
-      <aside className="sidebar">
-        <div className="logo">JobPortal</div>
-        <nav>
-          <a href="#">Dashboard</a>
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              setShowForm(true);
-            }}
-          >
-            Post Job
-          </a>
-          <a href="#">Manage Job</a>
-          <a href="#">Company Profile</a>
-        </nav>
-      </aside>
+      <Employersidebar onPostJob={() => setShowForm(true)} />
 
       <div className="main-content">
-        <header className="header">
-          <div className="title">Dashboard</div>
-          <div className="profile">
-            <img src={employerData.profilePic} alt="Profile" />
-            <div className="info">
-              <span>{employerData.name}</span>
-              <span>{employerData.role} <span>▼</span></span>
-            </div>
-          </div>
-        </header>
+        <Employerheader employerData={employerData} />
 
         <div className="stats-grid">
           <div className="stats-box">
@@ -162,13 +139,36 @@ const Employer = () => {
             <h2>Post a New Job</h2>
             <form onSubmit={handleSubmit}>
               <label>Job Title</label>
-              <input type="text" name="title" value={jobData.title} onChange={handleChange} required />
+              <input
+                type="text"
+                name="title"
+                value={jobData.title}
+                onChange={handleChange}
+                required
+              />
               <label>Location</label>
-              <input type="text" name="location" value={jobData.location} onChange={handleChange} required />
+              <input
+                type="text"
+                name="location"
+                value={jobData.location}
+                onChange={handleChange}
+                required
+              />
               <label>Category</label>
-              <input type="text" name="category" value={jobData.category} onChange={handleChange} required />
+              <input
+                type="text"
+                name="category"
+                value={jobData.category}
+                onChange={handleChange}
+                required
+              />
               <label>Job Type</label>
-              <select name="jobType" value={jobData.jobType} onChange={handleChange} required>
+              <select
+                name="jobType"
+                value={jobData.jobType}
+                onChange={handleChange}
+                required
+              >
                 <option value="">Select Type</option>
                 <option value="Full-Time">Full-Time</option>
                 <option value="Part-Time">Part-Time</option>
@@ -176,7 +176,13 @@ const Employer = () => {
                 <option value="Contract">Contract</option>
               </select>
               <label>Job Description</label>
-              <textarea name="description" value={jobData.description} onChange={handleChange} rows="5" required />
+              <textarea
+                name="description"
+                value={jobData.description}
+                onChange={handleChange}
+                rows="5"
+                required
+              />
               <label>Requirements</label>
               <textarea
                 name="requirements"
@@ -188,13 +194,35 @@ const Employer = () => {
               />
               <label>Salary Range</label>
               <div className="salary-range">
-                <input type="number" name="salaryMin" value={jobData.salaryMin} onChange={handleChange} placeholder="Min Salary" required />
+                <input
+                  type="number"
+                  name="salaryMin"
+                  value={jobData.salaryMin}
+                  onChange={handleChange}
+                  placeholder="Min Salary"
+                  required
+                />
                 <span>to</span>
-                <input type="number" name="salaryMax" value={jobData.salaryMax} onChange={handleChange} placeholder="Max Salary" required />
+                <input
+                  type="number"
+                  name="salaryMax"
+                  value={jobData.salaryMax}
+                  onChange={handleChange}
+                  placeholder="Max Salary"
+                  required
+                />
               </div>
               <div className="form-buttons">
-                <button type="submit" className="submit-btn">Post Job</button>
-                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="submit-btn">
+                  Post Job
+                </button>
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>

@@ -8,6 +8,7 @@ import CreateAccount from "./createAccount/createAccount";
 import Employer from "./employer/employer";
 import Jobseeker from "./jobseeker/jobseeker";
 import JobDetails from "./JobDetails/JobDetails";
+import ManageJobs from "./managejob/managejob";
 
 function App() {
 
@@ -23,6 +24,8 @@ function App() {
          <Route path="/employer" element={<Employer />} />
          <Route path="/jobseeker" element={<Jobseeker />} />
         <Route path="/job/:id" element={<JobDetails />} />
+         <Route path="/managejob" element={<ManageJobs />} />
+
       </Routes>
     </BrowserRouter>
   );
