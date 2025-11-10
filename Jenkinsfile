@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         PROJECT_DIR = "/mnt/d/MyApp2"
-        FRONTEND_IMAGE = "my-frontend-image"
-        BACKEND_IMAGE = "my-backend-image"
+        FRONTEND_IMAGE = "my-frontend1-image"
+        BACKEND_IMAGE = "my-backend1-image"
         DOCKER_HUB_USER = "bhagya122"
     }
 

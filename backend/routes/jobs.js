@@ -93,4 +93,24 @@ router.post("/:id/apply", authenticate, async (req, res) => {
   }
 });
 
+
+// routes/jobs.js
+router.put("/:id", authenticate, async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ success: false, message: "Job not found" });
+
+    if (req.user.role !== "employer" || job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    Object.assign(job, req.body);
+    await job.save();
+    res.json({ success: true, job });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 module.exports = router;
