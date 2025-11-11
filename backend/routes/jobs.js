@@ -1,20 +1,19 @@
 const express = require("express");
+const router = express.Router();
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 const Job = require("../models/Job");
 const User = require("../models/User");
 
-const router = express.Router();
-
-// File upload config
+// ---------------- File upload setup ----------------
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
 const upload = multer({ storage });
 
-// JWT authentication middleware
+// ---------------- JWT Authentication ----------------
 const authenticate = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ success: false, message: "No token provided" });
@@ -26,20 +25,17 @@ const authenticate = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    console.error("JWT error:", err);
+    console.error(err);
     res.status(403).json({ success: false, message: "Unauthorized" });
   }
 };
 
-// 1️⃣ Post job (employers only)
+// ---------------- Post new job ----------------
 router.post("/", authenticate, upload.single("attachment"), async (req, res) => {
   try {
-    if (req.user.role !== "employer")
-      return res.status(403).json({ success: false, message: "Only employers can post jobs" });
-
+    if (req.user.role !== "employer") return res.status(403).json({ success: false, message: "Only employers can post jobs" });
     const jobData = { ...req.body, postedBy: req.user._id };
     if (req.file) jobData.attachment = req.file.filename;
-
     const job = new Job(jobData);
     await job.save();
     res.status(201).json({ success: true, job });
@@ -49,10 +45,10 @@ router.post("/", authenticate, upload.single("attachment"), async (req, res) => 
   }
 });
 
-// 2️⃣ Get all jobs
+// ---------------- Get all jobs ----------------
 router.get("/", async (req, res) => {
   try {
-    const jobs = await Job.find().populate("postedBy", "name").sort({ postedAt: -1 });
+    const jobs = await Job.find().populate("postedBy", "fullName email").sort({ createdAt: -1 });
     res.json({ success: true, jobs });
   } catch (err) {
     console.error(err);
@@ -60,10 +56,22 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 3️⃣ Get single job by ID
+// ---------------- Get employer's jobs ----------------
+router.get("/myjobs", authenticate, async (req, res) => {
+  try {
+    if (req.user.role !== "employer") return res.status(403).json({ success: false, message: "Only employers allowed" });
+    const jobs = await Job.find({ postedBy: req.user._id }).sort({ createdAt: -1 });
+    res.json({ success: true, jobs });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ---------------- Get single job ----------------
 router.get("/:id", async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id).populate("postedBy", "name email");
+    const job = await Job.findById(req.params.id).populate("postedBy", "fullName email");
     if (!job) return res.status(404).json({ success: false, message: "Job not found" });
     res.json({ success: true, job });
   } catch (err) {
@@ -72,39 +80,14 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// 4️⃣ Apply for a job (job seekers only)
-router.post("/:id/apply", authenticate, async (req, res) => {
-  try {
-    if (req.user.role !== "jobseeker")
-      return res.status(403).json({ success: false, message: "Only job seekers can apply" });
-
-    const job = await Job.findById(req.params.id);
-    if (!job) return res.status(404).json({ success: false, message: "Job not found" });
-
-    if (!job.applicants.includes(req.user._id)) {
-      job.applicants.push(req.user._id);
-      await job.save();
-    }
-
-    res.json({ success: true, message: "Applied successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-
-
-// routes/jobs.js
+// ---------------- Update job ----------------
 router.put("/:id", authenticate, async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
     if (!job) return res.status(404).json({ success: false, message: "Job not found" });
+    if (job.postedBy.toString() !== req.user._id.toString()) return res.status(403).json({ success: false, message: "Not allowed" });
 
-    if (req.user.role !== "employer" || job.postedBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: "Unauthorized" });
-    }
-
-    Object.assign(job, req.body);
+    Object.assign(job, req.body); // update job fields
     await job.save();
     res.json({ success: true, job });
   } catch (err) {
@@ -112,5 +95,25 @@ router.put("/:id", authenticate, async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+// DELETE: Delete an application by ID
+router.delete("/:id", authenticate, async (req, res) => {
+  try {
+    const application = await Applicant.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user._id, // ensure user can only delete their own application
+    });
+
+    if (!application) {
+      return res.status(404).json({ success: false, message: "Application not found or not authorized" });
+    }
+
+    res.json({ success: true, message: "Application deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 module.exports = router;

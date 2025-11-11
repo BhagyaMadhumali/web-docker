@@ -1,8 +1,11 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./Hero.css";
 import Navbar from "../Header/Navbar";
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section
       className="hero"
@@ -18,8 +21,18 @@ const Hero = () => {
             Explore thousands of job opportunities and connect with top employers.
           </p>
           <div className="hero-buttons">
-            <button className="btn primary-btn">Post a Job</button>
-            <button className="btn secondary-btn">Find Jobs</button>
+            <button
+              className="btn primary-btn"
+              onClick={() => navigate("/signup")}
+            >
+              Post a Job
+            </button>
+            <button
+              className="btn secondary-btn"
+              onClick={() => navigate("/signup")}
+            >
+              Find Jobs
+            </button>
           </div>
         </div>
       </div>

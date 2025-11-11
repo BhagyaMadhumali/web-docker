@@ -1,102 +1,48 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Navbar from "../jobseekerheader/jobseekerheader";
+import Jobseekerheader from "../jobseekerheader/jobseekerheader";
 import "./JobDetails.css";
 
 const JobDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [job, setJob] = useState(null);
-  const [isApplying, setIsApplying] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchJob = async () => {
       try {
         const res = await axios.get(`http://localhost:4000/api/jobs/${id}`);
         if (res.data.success) setJob(res.data.job);
+        setLoading(false);
       } catch (err) {
         console.error(err);
+        setLoading(false);
       }
     };
     fetchJob();
   }, [id]);
 
-  const handleApply = async () => {
-    try {
-      setIsApplying(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Please login to apply for this job");
-        return;
-      }
-
-      const res = await axios.post(
-        `http://localhost:4000/api/jobs/${id}/apply`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      if (res.data.success) {
-        alert("✅ Applied successfully!");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("⚠️ Error applying for job. Please try again.");
-    } finally {
-      setIsApplying(false);
-    }
+  const handleApply = () => {
+    navigate(`/apply/${id}`, { state: { job } });
   };
 
-  if (!job) {
-    return (
-      <div className="job-details-container">
-        <Navbar />
-        <div className="loading-spinner">Loading job details...</div>
-      </div>
-    );
-  }
+  if (loading) return <><Jobseekerheader /><p>Loading job details...</p></>;
+  if (!job) return <><Jobseekerheader /><p>Job not found.</p></>;
 
   return (
     <div className="job-details-container">
-      <Navbar />
-      <div className="job-details-content">
-        <div className="job-details-card">
-          <div className="job-header">
-            <h1>{job.title}</h1>
-            <div className="job-meta">
-              <span className="job-category">{job.category}</span>
-              <span className="job-type">{job.jobType}</span>
-              <span className="job-location">📍 {job.location}</span>
-            </div>
-          </div>
-
-          <div className="job-salary-section">
-            <h3>💵 Salary Range</h3>
-            <p className="salary-range">${job.salaryMin} - ${job.salaryMax}</p>
-          </div>
-
-          <div className="job-description-section">
-            <h3>📝 Job Description</h3>
-            <p>{job.description}</p>
-          </div>
-
-          <div className="job-requirements-section">
-            <h3>🎯 Requirements</h3>
-            <p>{job.requirements}</p>
-          </div>
-
-    
-          <div className="job-actions">
-            <button 
-              className={`apply-btn ${isApplying ? 'applying' : ''}`}
-              onClick={handleApply}
-              disabled={isApplying}
-            >
-              {isApplying ? 'Applying...' : 'Apply Now'}
-            </button>
-            <button className="save-btn">Save Job</button>
-          </div>
-        </div>
+      <Jobseekerheader />
+      <div className="job-details-card">
+        <h1>{job.title}</h1>
+        <p><span>{job.category}</span></p>
+        <p><span>{job.jobType}</span></p>
+        <p><span>{job.location}</span></p>
+        <p><span>${job.salaryMin} - ${job.salaryMax}</span></p>
+        <p><span>{job.description}</span></p>
+        <p><span>{job.requirements}</span></p>
+        <button onClick={handleApply}>Apply Now</button>
       </div>
     </div>
   );

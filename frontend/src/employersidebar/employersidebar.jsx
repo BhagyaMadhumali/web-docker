@@ -7,16 +7,8 @@ const Employersidebar = ({ onPostJobClick }) => {
     <aside className="sidebar">
       <div className="logo">JobPortal</div>
       <nav>
-        <Link to="/">Dashboard</Link>
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            onPostJobClick();
-          }}
-        >
-          Post Job
-        </a>
+        <Link to="/employer">Dashboard</Link>
+       <Link to="/addjob">Post Job</Link> 
         <Link to="/managejob">Manage Job</Link> {/* ✅ Navigate to /managejob */}
         <Link to="/company-profile">Company Profile</Link>
       </nav>

@@ -9,6 +9,8 @@ import Employer from "./employer/employer";
 import Jobseeker from "./jobseeker/jobseeker";
 import JobDetails from "./JobDetails/JobDetails";
 import ManageJobs from "./managejob/managejob";
+import Addjob from "./AddJob/Addjob";
+import CVForm from "./cvform/cvform";
 
 function App() {
 
@@ -25,6 +27,9 @@ function App() {
          <Route path="/jobseeker" element={<Jobseeker />} />
         <Route path="/job/:id" element={<JobDetails />} />
          <Route path="/managejob" element={<ManageJobs />} />
+         <Route path="/addjob" element={<Addjob />} />
+         <Route path="/apply/:id" element={<CVForm />} />
+
 
       </Routes>
     </BrowserRouter>

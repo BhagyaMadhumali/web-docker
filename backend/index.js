@@ -13,10 +13,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const jobRoutes = require("./routes/jobs");
 const authRoutes = require("./routes/auth");
-const { updateMany } = require("./models/User");
+const applicantRoutes = require("./routes/applicant");
 
 app.use("/api/jobs", jobRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/applications", applicantRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)

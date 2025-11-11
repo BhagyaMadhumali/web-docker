@@ -1,141 +1,121 @@
-import React, { useState } from "react";
-import "../Header/Navbar.css";
-import Navbar from "../Header/Navbar";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate, useLocation } from "react-router-dom";
+import Employersidebar from "../employersidebar/employersidebar";
+import Employerheader from "../employerheader/employerheader";
 import "./Addjob.css";
 
-const Addjob = () => {
-  const [formData, setFormData] = useState({
+const Addjob = ({ employerData }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const editingJob = location.state?.job;
+
+  const [jobData, setJobData] = useState({
     title: "",
-    company: "",
     location: "",
+    category: "",
     jobType: "",
-    salary: "",
     description: "",
+    requirements: "",
+    salaryMin: "",
+    salaryMax: "",
   });
 
+  useEffect(() => {
+    if (editingJob) {
+      setJobData({
+        title: editingJob.title,
+        location: editingJob.location,
+        category: editingJob.category,
+        jobType: editingJob.jobType,
+        description: editingJob.description,
+        requirements: editingJob.requirements,
+        salaryMin: editingJob.salaryMin,
+        salaryMax: editingJob.salaryMax,
+      });
+    }
+  }, [editingJob]);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setJobData({ ...jobData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const res = await fetch("http://localhost:5000/api/jobs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const token = localStorage.getItem("token");
 
-      if (res.ok) {
-        alert("Job added successfully!");
-        setFormData({
-          title: "",
-          company: "",
-          location: "",
-          jobType: "",
-          salary: "",
-          description: "",
+      if (editingJob) {
+        // Update job
+        await axios.put(`http://localhost:4000/api/jobs/${editingJob._id}`, jobData, {
+          headers: { Authorization: `Bearer ${token}` },
         });
+        alert("✅ Job updated successfully!");
       } else {
-        alert("Failed to add job.");
+        // Post new job
+        await axios.post("http://localhost:4000/api/jobs", jobData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert("✅ Job posted successfully!");
       }
+
+      navigate("/managejob"); // redirect back to job list
     } catch (err) {
       console.error(err);
-      alert("Error connecting to the server.");
+      alert("⚠️ Error posting/updating job.");
     }
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="addjob-container">
-        <div className="addjob-card">
-          <h2>Add New Job</h2>
+    <div className="dashboard-container">
+      <Employersidebar />
+      <div className="main-content">
+        <Employerheader employerData={employerData} />
+        <div className="addjob-container">
+          <button className="cancel-btn" onClick={() => navigate("/managejob")}>
+            ✖ Cancel
+          </button>
+          <h2>{editingJob ? "Update Job" : "Post a New Job"}</h2>
           <form onSubmit={handleSubmit} className="addjob-form">
-            <div className="form-group">
-              <label>Job Title</label>
-              <input
-                type="text"
-                name="title"
-                placeholder="Enter job title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-              />
+            <label>Job Title</label>
+            <input type="text" name="title" value={jobData.title} onChange={handleChange} required />
+
+            <label>Location</label>
+            <input type="text" name="location" value={jobData.location} onChange={handleChange} required />
+
+            <label>Category</label>
+            <input type="text" name="category" value={jobData.category} onChange={handleChange} required />
+
+            <label>Job Type</label>
+            <select name="jobType" value={jobData.jobType} onChange={handleChange} required>
+              <option value="">Select Type</option>
+              <option value="Full-Time">Full-Time</option>
+              <option value="Part-Time">Part-Time</option>
+              <option value="Internship">Internship</option>
+              <option value="Contract">Contract</option>
+            </select>
+
+            <label>Job Description</label>
+            <textarea name="description" value={jobData.description} onChange={handleChange} rows="5" required />
+
+            <label>Requirements</label>
+            <textarea name="requirements" value={jobData.requirements} onChange={handleChange} rows="5" required />
+
+            <label>Salary Range</label>
+            <div className="salary-range">
+              <input type="number" name="salaryMin" value={jobData.salaryMin} onChange={handleChange} placeholder="Min Salary" required />
+              <span>to</span>
+              <input type="number" name="salaryMax" value={jobData.salaryMax} onChange={handleChange} placeholder="Max Salary" required />
             </div>
 
-            <div className="form-group">
-              <label>Company Name</label>
-              <input
-                type="text"
-                name="company"
-                placeholder="Enter company name"
-                value={formData.company}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Location</label>
-              <input
-                type="text"
-                name="location"
-                placeholder="Enter job location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Job Type</label>
-              <select
-                name="jobType"
-                value={formData.jobType}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Type</option>
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-                <option value="Internship">Internship</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Salary (LKR)</label>
-              <input
-                type="number"
-                name="salary"
-                placeholder="Enter salary"
-                value={formData.salary}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Description</label>
-              <textarea
-                name="description"
-                placeholder="Enter job description"
-                rows="5"
-                value={formData.description}
-                onChange={handleChange}
-                required
-              ></textarea>
-            </div>
-
-            <button type="submit" className="btn-submit">
-              Add Job
+            <button type="submit" className="submit-btn">
+              {editingJob ? "Update Job" : "Post Job"}
             </button>
           </form>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

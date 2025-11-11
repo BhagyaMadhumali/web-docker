@@ -1,0 +1,22 @@
+.applicant-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.applicant-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.applicant-row.header {
+  background-color: #0077b6;
+  color: white;
+  font-weight: bold;
+}
+
+.applicant-row:hover {
+  background-color: #f9f9f9;
+}

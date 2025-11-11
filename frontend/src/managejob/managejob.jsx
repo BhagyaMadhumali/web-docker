@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import Employersidebar from "../employersidebar/employersidebar";
 import Employerheader from "../employerheader/employerheader";
 import "./managejob.css";
@@ -7,6 +8,7 @@ import "./managejob.css";
 const ManageJob = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchJobs = async () => {
     try {
@@ -26,24 +28,29 @@ const ManageJob = () => {
     fetchJobs();
   }, []);
 
-  const handleEdit = (jobId) => {
-    // redirect to edit page or open popup
-    alert(`Edit job with ID: ${jobId}`);
+  const handleEdit = (job) => {
+    // Navigate to AddJob page and pass job data
+    navigate("/addjob", { state: { job } });
   };
 
-  const handleDelete = async (jobId) => {
-    if (window.confirm("Are you sure you want to delete this job?")) {
-      try {
-        const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:4000/api/jobs/${jobId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setJobs(jobs.filter((job) => job._id !== jobId));
-      } catch (err) {
-        console.error(err);
+ const handleDelete = async (appId) => {
+  if (window.confirm("Are you sure you want to delete this application?")) {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.delete(`http://localhost:4000/api/applicants/${appId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success) {
+        setApplications(applications.filter((app) => app._id !== appId));
+        alert("✅ Application deleted successfully!");
       }
+    } catch (err) {
+      console.error(err);
+      alert("⚠️ Error deleting application.");
     }
-  };
+  }
+};
+
 
   return (
     <div className="dashboard-container">
@@ -73,7 +80,7 @@ const ManageJob = () => {
                   ${job.salaryMin} - ${job.salaryMax}
                 </span>
                 <span className="actions">
-                  <button onClick={() => handleEdit(job._id)} className="edit-btn">
+                  <button onClick={() => handleEdit(job)} className="edit-btn">
                     Edit
                   </button>
                   <button onClick={() => handleDelete(job._id)} className="delete-btn">
