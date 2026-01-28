@@ -14,6 +14,15 @@ pipeline {
             }
         }
 
+        stage('Prepare Scripts') {
+            steps {
+                dir("${WORKSPACE}/scripts") {
+                    echo "🔧 Making scripts executable..."
+                    sh 'chmod +x *.sh'
+                }
+            }
+        }
+
         stage('Build Docker Images') {
             steps {
                 dir("${WORKSPACE}/scripts") {
