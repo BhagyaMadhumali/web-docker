@@ -2,80 +2,55 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_DIR = "/mnt/d/MyApp2"
-        FRONTEND_IMAGE = "my-frontend1-image"
-        BACKEND_IMAGE = "my-backend1-image"
-        DOCKER_HUB_USER = "bhagya122"
+        DOCKER_USER = credentials('dockerhub-creds')   
+        AWS_KEY     = credentials('aws-access-key')    
+        AWS_SECRET  = credentials('aws-secret-key')
     }
 
     stages {
-        stage('Checkout') {
+
+        stage('Checkout Code') {
             steps {
-                echo "Pulling code from GitHub..."
-                checkout scm
+                // Pull repo into Jenkins workspace
+                git branch: 'main', url: 'https://github.com/BhagyaMadhumali/web-docker.git'
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                dir("${PROJECT_DIR}/frontend") {
-                    echo "Building frontend Docker image..."
-                    sh "docker build -t ${FRONTEND_IMAGE}:latest ."
-                }
-
-                dir("${PROJECT_DIR}/backend") {
-                    echo "Building backend Docker image..."
-                    sh "docker build -t ${BACKEND_IMAGE}:latest ."
+                dir("${WORKSPACE}") {
+                    sh 'chmod +x ./scripts/build.sh'
+                    sh './scripts/build.sh'
                 }
             }
         }
 
         stage('Push Docker Images') {
             steps {
-                // Use withCredentials to safely handle Docker Hub password/token
-                withCredentials([string(credentialsId: 'docker-hub-password', variable: 'DOCKER_HUB_PASS')]) {
-                    echo "Logging into Docker Hub..."
-                    sh """
-                        echo \$DOCKER_HUB_PASS | docker login -u ${DOCKER_HUB_USER} --password-stdin
-                        
-                        echo "Tagging frontend image..."
-                        docker tag ${FRONTEND_IMAGE}:latest ${DOCKER_HUB_USER}/${FRONTEND_IMAGE}:latest
-                        
-                        echo "Tagging backend image..."
-                        docker tag ${BACKEND_IMAGE}:latest ${DOCKER_HUB_USER}/${BACKEND_IMAGE}:latest
-                        
-                        echo "Pushing frontend image..."
-                        docker push ${DOCKER_HUB_USER}/${FRONTEND_IMAGE}:latest
-                        
-                        echo "Pushing backend image..."
-                        docker push ${DOCKER_HUB_USER}/${BACKEND_IMAGE}:latest
-                    """
+                dir("${WORKSPACE}") {
+                    sh 'chmod +x ./scripts/push.sh'
+                    sh "./scripts/push.sh $DOCKER_USER_USR $DOCKER_USER_PSW"
                 }
             }
         }
 
-        stage('Run Containers') {
-            steps {
-                dir("${PROJECT_DIR}") {
-                    echo "Starting containers using docker-compose..."
-                    sh 'docker compose up -d'
-                }
-            }
+    stage('Deploy to AWS') {
+    steps {
+        dir("${WORKSPACE}") {
+            sh 'chmod +x ./scripts/deploy.sh'
+            sh "./scripts/deploy.sh $AWS_KEY $AWS_SECRET us-east-1 my-ecs-cluster my-ecs-service"
         }
+    }
+}
 
-        stage('Check Running Containers') {
-            steps {
-                sh 'docker ps'
-            }
-        }
     }
 
     post {
         success {
-            echo '✅ Deployment and push successful! Both frontend and backend images are on Docker Hub.'
+            echo "CI/CD pipeline completed successfully!"
         }
         failure {
-            echo '❌ Deployment or push failed!'
+            echo "Pipeline failed. Check Jenkins console for details."
         }
     }
 }

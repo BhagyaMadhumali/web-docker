@@ -11,7 +11,8 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-const jobRoutes = require("./routes/jobs");
+// Change this line - use "job" instead of "jobs"
+const jobRoutes = require("./routes/job");
 const authRoutes = require("./routes/auth");
 const applicantRoutes = require("./routes/applicant");
 

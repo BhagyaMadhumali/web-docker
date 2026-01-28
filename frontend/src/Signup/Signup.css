@@ -1,105 +1,273 @@
-/* ===== Page Layout ===== */
 .signup-page {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  background-color: #f5f7fa;
-  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
 }
 
-/* ===== Signup Card ===== */
 .signup-box {
-  background-color: white;
-  padding: 3rem 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
   width: 100%;
-  max-width: 420px; /* slightly wider for better layout */
-  text-align: center;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.5s ease-out;
 }
 
-/* ===== Headings ===== */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .welcome-text {
-  font-size: 1.8rem;
+  font-size: 28px;
   font-weight: 700;
-  color: #222;
-  margin-bottom: 0.5rem;
+  color: #1a202c;
+  margin: 0 0 8px 0;
+  text-align: center;
 }
 
 .subtitle {
-  color: #666;
-  font-size: 0.95rem;
-  margin-bottom: 1.5rem;
+  font-size: 16px;
+  color: #718096;
+  margin: 0 0 32px 0;
+  text-align: center;
 }
 
-/* ===== Form Structure ===== */
+/* Profile Picture Upload */
+.profile-pic-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.profile-pic-container {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #10b981;
+  background: #f0fdf4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.profile-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
+  font-size: 40px;
+}
+
+.upload-label {
+  cursor: pointer;
+  color: #059669;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+.upload-label:hover {
+  background: #d1fae5;
+  transform: translateY(-2px);
+}
+
+.upload-text {
+  border-bottom: 1px solid #10b981;
+}
+
+.file-input {
+  display: none;
+}
+
+/* Form Styles */
 .form-group {
-  text-align: left;
-  margin-bottom: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .input-label {
-  display: block;
-  font-size: 0.95rem;
-  color: #333;
-  margin-bottom: 6px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
 }
 
-/* ===== Inputs ===== */
 .input-field {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-  box-sizing: border-box;
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  background: white;
 }
 
 .input-field:focus {
-  border-color: #00c897;
-  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
-/* ===== Button ===== */
-.btn1 {
-  padding: 12px 28px;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 8px;
+.input-field::placeholder {
+  color: #a0aec0;
+}
+
+/* Role Selection */
+.role-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.role-option {
+  padding: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   cursor: pointer;
-  border: none;
   transition: all 0.3s ease;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.role-option:hover {
+  border-color: #10b981;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.role-option-active {
+  border-color: #10b981;
+  background: #d1fae5;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.radio-input {
+  display: none;
+}
+
+.role-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-icon {
+  color: #059669;
+  width: 28px;
+  height: 28px;
+}
+
+.role-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Buttons */
+.signupform-btn,
+.signinform-btn {
   width: 100%;
-  margin-top: 10px;
-}
-
-.signupform-btn {
-  background: #00c897;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
   color: white;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+  font-family: inherit;
 }
 
-.signupform-btn:hover {
-  background: #00a97e;
+.signupform-btn:hover,
+.signinform-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
 }
 
-/* ===== Login text ===== */
-.loginform-text {
+.signupform-btn:active,
+.signinform-btn:active {
+  transform: translateY(0);
+}
+
+.signupform-btn:disabled,
+.signinform-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Footer Links */
+.loginform-text,
+.signupform-text {
   text-align: center;
-  margin-top: 20px;
-  color: #333;
-  font-size: 0.95rem;
+  margin-top: 24px;
+  font-size: 14px;
+  color: #718096;
 }
 
+.signupform-link,
 .loginform-link {
-  color: #00c897;
+  color: #059669;
   font-weight: 600;
   text-decoration: none;
-  margin-left: 4px;
+  transition: color 0.3s ease;
 }
 
+.signupform-link:hover,
 .loginform-link:hover {
+  color: #047857;
   text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .signup-box {
+    padding: 30px 20px;
+  }
+
+  .welcome-text {
+    font-size: 24px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .role-container {
+    grid-template-columns: 1fr;
+  }
 }
