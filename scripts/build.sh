@@ -1,27 +1,13 @@
 #!/bin/bash
 set -e
 
-echo "=============================="
-echo " Building Docker Images..."
-echo "=============================="
+echo "🔨 Building Docker images..."
 
-FRONTEND_IMAGE="my-frontend1-image:latest"
-BACKEND_IMAGE="my-backend1-image:latest"
+# Go to the repo root
+cd "$(dirname "$0")/.."
 
-# Build frontend
-if [ -d "frontend" ]; then
-  echo "Building frontend image..."
-  docker build -t $FRONTEND_IMAGE ./frontend
-else
-  echo "⚠️ frontend folder not found. Skipping frontend build."
-fi
+# Build the images individually
+docker build -t my-frontend1-image ./frontend
+docker build -t my-backend1-image ./backend
 
-# Build backend
-if [ -d "backend" ]; then
-  echo "Building backend image..."
-  docker build -t $BACKEND_IMAGE ./backend
-else
-  echo "⚠️ backend folder not found. Skipping backend build."
-fi
-
-echo "✅ Docker build completed!"
+echo "✅ Docker images built successfully"

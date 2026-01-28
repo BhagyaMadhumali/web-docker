@@ -1,20 +1,15 @@
 #!/bin/bash
 set -e
 
-AWS_REGION=$1
-ECS_CLUSTER=$2
-ECS_SERVICE=$3
+echo "🚀 Deploying containers using Docker Compose..."
 
-if [ -z "$AWS_REGION" ] || [ -z "$ECS_CLUSTER" ] || [ -z "$ECS_SERVICE" ]; then
-  echo "Usage: ./deploy.sh <AWS_REGION> <ECS_CLUSTER> <ECS_SERVICE>"
-  exit 1
-fi
+# Go to project root
+cd "$(dirname "$0")/.."
 
-echo "Deploying to ECS..."
-aws ecs update-service \
-  --region "$AWS_REGION" \
-  --cluster "$ECS_CLUSTER" \
-  --service "$ECS_SERVICE" \
-  --force-new-deployment
+# Stop and remove old containers
+docker compose down
 
-echo "✅ ECS deployment triggered!"
+# Start new containers
+docker compose up -d
+
+echo "✅ Application deployed successfully"

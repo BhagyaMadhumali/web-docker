@@ -1,40 +1,18 @@
 #!/bin/bash
 set -e
 
-DOCKER_USERNAME=$1
-DOCKER_PASSWORD=$2
+DOCKER_USER=$1
+DOCKER_PASS=$2
 
-if [ -z "$DOCKER_USERNAME" ] || [ -z "$DOCKER_PASSWORD" ]; then
-  echo "❌ DockerHub username/password not provided!"
-  echo "Usage: ./push.sh <DOCKER_USERNAME> <DOCKER_PASSWORD>"
-  exit 1
-fi
+echo "🔐 Logging in to Docker Hub..."
+echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-echo "=============================="
-echo " DockerHub Login..."
-echo "=============================="
+echo "🏷️ Tagging frontend and backend images..."
+docker tag my-frontend1-image $DOCKER_USER/my-frontend1-image:latest
+docker tag my-backend1-image $DOCKER_USER/my-backend1-image:latest
 
-echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+echo "📤 Pushing images to Docker Hub..."
+docker push $DOCKER_USER/my-frontend1-image:latest
+docker push $DOCKER_USER/my-backend1-image:latest
 
-# Tag images to DockerHub username
-FRONTEND_LOCAL="my-frontend1-image:latest"
-BACKEND_LOCAL="my-backend1-image:latest"
-
-FRONTEND_REMOTE="$DOCKER_USERNAME/my-frontend1-image:latest"
-BACKEND_REMOTE="$DOCKER_USERNAME/my-backend1-image:latest"
-
-echo "=============================="
-echo " Tagging Images..."
-echo "=============================="
-
-docker tag $FRONTEND_LOCAL $FRONTEND_REMOTE
-docker tag $BACKEND_LOCAL $BACKEND_REMOTE
-
-echo "=============================="
-echo " Pushing Docker Images..."
-echo "=============================="
-
-docker push $FRONTEND_REMOTE
-docker push $BACKEND_REMOTE
-
-echo "✅ Docker push completed!"
+echo "✅ Images pushed successfully"
