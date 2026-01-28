@@ -6,7 +6,7 @@ echo "🚀 Deploying containers using Docker Compose..."
 # Go to project root
 cd "$(dirname "$0")/.."
 
-# Stop and remove old containers
+# Stop old containers
 docker compose down
 
 # Start new containers

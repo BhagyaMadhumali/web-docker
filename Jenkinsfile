@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         DOCKER_USER = credentials('dockerhub-creds')  // DockerHub username + password stored in Jenkins
-        AWS_KEY     = credentials('aws-access-key')    // AWS access key
-        AWS_SECRET  = credentials('aws-secret-key')    // AWS secret key
+        AWS_KEY     = credentials('aws-access-key')   // AWS access key
+        AWS_SECRET  = credentials('aws-secret-key')   // AWS secret key
     }
 
     stages {
@@ -25,7 +25,7 @@ pipeline {
         stage('Push Docker Images') {
             steps {
                 sh 'chmod +x ./scripts/push.sh'
-                // Correct way to use credentials in Groovy string interpolation
+                // Correct Groovy syntax for credentials
                 sh "./scripts/push.sh ${DOCKER_USER_USR} ${DOCKER_USER_PSW}"
             }
         }
@@ -47,4 +47,3 @@ pipeline {
         }
     }
 }
-//jenkin
