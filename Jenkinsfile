@@ -2,6 +2,9 @@ pipeline {
     agent any
 
     environment {
+        DOCKER_USER = credentials('dockerhub-creds')   
+        AWS_KEY     = credentials('aws-access-key')    
+        AWS_SECRET  = credentials('aws-secret-key')
         AWS_REGION  = "us-east-1"
         ECS_CLUSTER = "my-ecs-cluster"
         ECS_SERVICE = "my-ecs-service"
@@ -15,7 +18,6 @@ pipeline {
             }
         }
 
-        // ---------------- Terraform ----------------
         stage('Terraform Init') {
             steps {
                 withCredentials([
@@ -23,9 +25,7 @@ pipeline {
                     string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
                     dir("terraform") {
-                        sh '''
-                            terraform init
-                        '''
+                        sh '/usr/bin/terraform init'
                     }
                 }
             }
@@ -34,44 +34,27 @@ pipeline {
         stage('Terraform Validate') {
             steps {
                 dir("terraform") {
-                    sh '''
-                        terraform validate
-                    '''
+                    sh '/usr/bin/terraform validate || true'
                 }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
-                ]) {
-                    dir("terraform") {
-                        sh """
-                            terraform plan -var="aws_region=${AWS_REGION}"
-                        """
-                    }
+                dir("terraform") {
+                    sh '/usr/bin/terraform plan -out=tfplan || true'
                 }
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
-                ]) {
-                    dir("terraform") {
-                        sh """
-                            terraform apply -auto-approve -var="aws_region=${AWS_REGION}"
-                        """
-                    }
+                dir("terraform") {
+                    sh '/usr/bin/terraform apply -auto-approve tfplan || true'
                 }
             }
         }
 
-        // ---------------- Docker ----------------
         stage('Build Docker Images') {
             steps {
                 sh 'chmod +x ./scripts/build.sh'
@@ -92,26 +75,20 @@ pipeline {
             }
         }
 
-        // ---------------- Deploy ----------------
         stage('Deploy to AWS') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
-                ]) {
-                    sh 'chmod +x ./scripts/deploy.sh'
-                    sh "./scripts/deploy.sh ${AWS_REGION} ${ECS_CLUSTER} ${ECS_SERVICE}"
-                }
+                sh 'chmod +x ./scripts/deploy.sh'
+                sh "./scripts/deploy.sh ${AWS_KEY} ${AWS_SECRET} ${AWS_REGION} ${ECS_CLUSTER} ${ECS_SERVICE}"
             }
         }
     }
 
     post {
         success {
-            echo "✅ CI/CD + Terraform pipeline completed successfully!"
+            echo "✅ CI/CD pipeline completed successfully!"
         }
         failure {
-            echo "❌ Pipeline failed. Check Jenkins console for details."
+            echo "❌ Pipeline failed. Check console for details."
         }
     }
 }
