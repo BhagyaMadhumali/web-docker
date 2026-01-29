@@ -40,35 +40,26 @@ pipeline {
             }
         }
 
-        stage('Terraform Init & Plan') {
-            steps {
-                dir('terraform') {
-                    withEnv(["PATH+TOOLS=/usr/bin"]) {
-                        echo "🔧 Initializing Terraform..."
-                        sh '/usr/bin/terraform init'
-
-                        echo "📄 Running Terraform plan..."
-                        withCredentials([
-                            string(credentialsId: 'aws-access-key', variable: 'AWS_KEY'),
-                            string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET')
-                        ]) {
-                            sh "/usr/bin/terraform plan -out=tfplan -var 'aws_access_key=$AWS_KEY' -var 'aws_secret_key=$AWS_SECRET'"
-                        }
-                    }
-                }
-            }
+       stage('Terraform Init & Plan') {
+    steps {
+        dir('terraform') {
+            echo "🔧 Initializing Terraform..."
+            sh "/usr/local/bin/terraform init"
+            echo "📄 Running Terraform plan..."
+            sh "/usr/local/bin/terraform plan -out=tfplan -var 'aws_access_key=${AWS_KEY}' -var 'aws_secret_key=${AWS_SECRET}'"
         }
+    }
+}
 
-        stage('Terraform Apply') {
-            steps {
-                dir('terraform') {
-                    withEnv(["PATH+TOOLS=/usr/bin"]) {
-                        echo "🚀 Applying Terraform..."
-                        sh '/usr/bin/terraform apply -auto-approve tfplan'
-                    }
-                }
-            }
+stage('Terraform Apply') {
+    steps {
+        dir('terraform') {
+            echo "🚀 Applying Terraform..."
+            sh "/usr/local/bin/terraform apply -auto-approve tfplan"
         }
+    }
+}
+
 
         stage('Deploy to AWS') {
             steps {
