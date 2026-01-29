@@ -7,6 +7,8 @@ pipeline {
         // AWS credentials
         AWS_KEY     = credentials('aws-access-key')
         AWS_SECRET  = credentials('aws-secret-key')
+        // EC2 Key Pair for Terraform
+        KEY_NAME    = credentials('ec2-key-name') // <-- Add this in Jenkins credentials
         // Ensure Jenkins finds Terraform
         PATH        = "/usr/bin:/usr/local/bin:$PATH"
     }
@@ -47,8 +49,20 @@ pipeline {
                 dir('terraform') {
                     echo "🔧 Initializing Terraform..."
                     sh 'terraform init -input=false'
+
                     echo "📄 Running Terraform plan..."
-                    sh "terraform plan -input=false -out=tfplan -var 'aws_access_key=${AWS_KEY}' -var 'aws_secret_key=${AWS_SECRET}'"
+                    withEnv([
+                        "AWS_KEY=${AWS_KEY}",
+                        "AWS_SECRET=${AWS_SECRET}",
+                        "KEY_NAME=${KEY_NAME}"
+                    ]) {
+                        sh """
+                            terraform plan -input=false -out=tfplan \
+                            -var 'aws_access_key=${AWS_KEY}' \
+                            -var 'aws_secret_key=${AWS_SECRET}' \
+                            -var 'key_name=${KEY_NAME}'
+                        """
+                    }
                 }
             }
         }
@@ -57,7 +71,13 @@ pipeline {
             steps {
                 dir('terraform') {
                     echo "🚀 Applying Terraform..."
-                    sh 'terraform apply -input=false -auto-approve tfplan'
+                    withEnv([
+                        "AWS_KEY=${AWS_KEY}",
+                        "AWS_SECRET=${AWS_SECRET}",
+                        "KEY_NAME=${KEY_NAME}"
+                    ]) {
+                        sh 'terraform apply -input=false -auto-approve tfplan'
+                    }
                 }
             }
         }
