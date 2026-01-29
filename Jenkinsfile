@@ -2,9 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // DockerHub credentials (Username + Password)
         DOCKER_USER = credentials('dockerhub-creds')
-        // AWS credentials (Secret keys if needed)
         AWS_KEY     = credentials('aws-access-key')
         AWS_SECRET  = credentials('aws-secret-key')
     }
@@ -12,14 +10,12 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                echo "🔄 Checking out code from GitHub..."
                 git branch: 'main', url: 'https://github.com/BhagyaMadhumali/web-docker.git'
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                echo "🛠 Building Docker images..."
                 sh 'chmod +x ./scripts/build.sh'
                 sh './scripts/build.sh'
             }
@@ -27,17 +23,33 @@ pipeline {
 
         stage('Push Docker Images') {
             steps {
-                echo "📤 Pushing Docker images to DockerHub..."
                 sh 'chmod +x ./scripts/push.sh'
-                // Uses DockerHub credentials injected by Jenkins
                 sh "./scripts/push.sh ${DOCKER_USER_USR} ${DOCKER_USER_PSW}"
+            }
+        }
+
+        stage('Terraform Init & Plan') {
+            steps {
+                dir('terraform') {
+                    echo "🔧 Initializing Terraform..."
+                    sh "terraform init"
+                    echo "📄 Running Terraform plan..."
+                    sh "terraform plan -out=tfplan -var 'aws_access_key=${AWS_KEY}' -var 'aws_secret_key=${AWS_SECRET}'"
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('terraform') {
+                    echo "🚀 Applying Terraform..."
+                    sh "terraform apply -auto-approve tfplan"
+                }
             }
         }
 
         stage('Deploy to AWS') {
             steps {
-                echo "🚀 Deploying to AWS server..."
-                // Use the SSH key stored in Jenkins
                 sshagent(['ec2-ssh-key']) {
                     sh 'chmod +x ./scripts/deploy.sh'
                     sh './scripts/deploy.sh'
@@ -55,4 +67,3 @@ pipeline {
         }
     }
 }
-//jenkinfile add

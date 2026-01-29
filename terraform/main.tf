@@ -1,22 +1,42 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
+# Security Group for EC2
+resource "aws_security_group" "web_sg" {
+  name        = var.security_group_name
+  description = "Allow SSH and HTTP access"
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
-provider "aws" {
-  region     = var.aws_region
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+# EC2 instance
+resource "aws_instance" "web_server" {
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  security_groups        = [aws_security_group.web_sg.name]
+
+  tags = {
+    Name = "job-protal-webserver"
+  }
 }
 
-resource "aws_ecs_cluster" "my_cluster" {
-  name = var.ecs_cluster_name
-}
-
-output "ecs_cluster_name" {
-  value = aws_ecs_cluster.my_cluster.name
+# Output public IP
+output "instance_public_ip" {
+  value = aws_instance.web_server.public_ip
 }

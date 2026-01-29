@@ -1,3 +1,5 @@
-output "cluster_name" {
-  value = aws_ecs_cluster.my_cluster.name
+# Outputs
+output "web_server_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.web_server.public_ip
 }
