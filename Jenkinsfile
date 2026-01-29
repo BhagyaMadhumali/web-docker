@@ -8,7 +8,7 @@ pipeline {
         AWS_KEY     = credentials('aws-access-key')
         AWS_SECRET  = credentials('aws-secret-key')
         // EC2 Key Pair for Terraform
-        KEY_NAME    = credentials('ec2-key-name') // <-- Add this in Jenkins credentials
+        KEY_NAME    = credentials('ec2-key-name') // <-- Make sure this exists in Jenkins
         // Ensure Jenkins finds Terraform
         PATH        = "/usr/bin:/usr/local/bin:$PATH"
     }
@@ -51,18 +51,12 @@ pipeline {
                     sh 'terraform init -input=false'
 
                     echo "📄 Running Terraform plan..."
-                    withEnv([
-                        "AWS_KEY=${AWS_KEY}",
-                        "AWS_SECRET=${AWS_SECRET}",
-                        "KEY_NAME=${KEY_NAME}"
-                    ]) {
-                        sh """
-                            terraform plan -input=false -out=tfplan \
-                            -var 'aws_access_key=${AWS_KEY}' \
-                            -var 'aws_secret_key=${AWS_SECRET}' \
-                            -var 'key_name=${KEY_NAME}'
-                        """
-                    }
+                    sh """
+                        terraform plan -input=false -out=tfplan \
+                        -var 'aws_access_key=${AWS_KEY}' \
+                        -var 'aws_secret_key=${AWS_SECRET}' \
+                        -var 'key_name=${KEY_NAME}'
+                    """
                 }
             }
         }
@@ -71,13 +65,7 @@ pipeline {
             steps {
                 dir('terraform') {
                     echo "🚀 Applying Terraform..."
-                    withEnv([
-                        "AWS_KEY=${AWS_KEY}",
-                        "AWS_SECRET=${AWS_SECRET}",
-                        "KEY_NAME=${KEY_NAME}"
-                    ]) {
-                        sh 'terraform apply -input=false -auto-approve tfplan'
-                    }
+                    sh 'terraform apply -input=false -auto-approve tfplan'
                 }
             }
         }
@@ -104,4 +92,3 @@ pipeline {
         }
     }
 }
-//jenkinsfile
