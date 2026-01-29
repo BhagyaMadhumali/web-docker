@@ -2,7 +2,9 @@ pipeline {
     agent any
 
     environment {
+        // DockerHub credentials (Username + Password)
         DOCKER_USER = credentials('dockerhub-creds')
+        // AWS credentials
         AWS_KEY     = credentials('aws-access-key')
         AWS_SECRET  = credentials('aws-secret-key')
     }
@@ -10,12 +12,14 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
+                echo "🔄 Checking out code from GitHub..."
                 git branch: 'main', url: 'https://github.com/BhagyaMadhumali/web-docker.git'
             }
         }
 
         stage('Build Docker Images') {
             steps {
+                echo "🛠 Building Docker images..."
                 sh 'chmod +x ./scripts/build.sh'
                 sh './scripts/build.sh'
             }
@@ -23,6 +27,7 @@ pipeline {
 
         stage('Push Docker Images') {
             steps {
+                echo "📤 Pushing Docker images to DockerHub..."
                 sh 'chmod +x ./scripts/push.sh'
                 sh "./scripts/push.sh ${DOCKER_USER_USR} ${DOCKER_USER_PSW}"
             }
@@ -32,9 +37,9 @@ pipeline {
             steps {
                 dir('terraform') {
                     echo "🔧 Initializing Terraform..."
-                    sh "terraform init"
+                    sh "/usr/bin/terraform init"
                     echo "📄 Running Terraform plan..."
-                    sh "terraform plan -out=tfplan -var 'aws_access_key=${AWS_KEY}' -var 'aws_secret_key=${AWS_SECRET}'"
+                    sh "/usr/bin/terraform plan -out=tfplan -var 'aws_access_key=${AWS_KEY}' -var 'aws_secret_key=${AWS_SECRET}'"
                 }
             }
         }
@@ -43,7 +48,7 @@ pipeline {
             steps {
                 dir('terraform') {
                     echo "🚀 Applying Terraform..."
-                    sh "terraform apply -auto-approve tfplan"
+                    sh "/usr/bin/terraform apply -auto-approve tfplan"
                 }
             }
         }
@@ -51,6 +56,7 @@ pipeline {
         stage('Deploy to AWS') {
             steps {
                 sshagent(['ec2-ssh-key']) {
+                    echo "🚀 Deploying Docker containers on server..."
                     sh 'chmod +x ./scripts/deploy.sh'
                     sh './scripts/deploy.sh'
                 }
