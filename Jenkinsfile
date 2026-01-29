@@ -2,13 +2,8 @@ pipeline {
     agent any
 
     environment {
-        // DockerHub credentials
-        DOCKER_USER = credentials('dockerhub-creds')
-        // AWS credentials
-        AWS_KEY     = credentials('aws-access-key')
-        AWS_SECRET  = credentials('aws-secret-key')
-        // Ensure Terraform is in PATH
-        PATH        = "/usr/bin:/usr/local/bin:$PATH"
+        // Add terraform + docker to PATH properly
+        PATH = "/usr/local/bin:/usr/bin:/bin"
     }
 
     stages {
@@ -22,22 +17,28 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                withEnv(["PATH+TOOLS=/usr/bin:/usr/local/bin"]) {
-                    echo "🛠 Building Docker images..."
-                    sh 'chmod +x ./scripts/build.sh'
-                    sh './scripts/build.sh'
-                }
+                echo "🛠 Building Docker images..."
+                sh '''
+                    chmod +x ./scripts/build.sh
+                    ./scripts/build.sh
+                '''
             }
         }
 
         stage('Push Docker Images') {
             steps {
-                withEnv(["PATH+TOOLS=/usr/bin:/usr/local/bin"]) {
-                    echo "📤 Pushing Docker images to DockerHub..."
-                    sh 'chmod +x ./scripts/push.sh'
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER_USR', passwordVariable: 'DOCKER_USER_PSW')]) {
-                        sh './scripts/push.sh $DOCKER_USER_USR $DOCKER_USER_PSW'
-                    }
+                echo "📤 Pushing Docker images to DockerHub..."
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKERHUB_PASS'
+                    )
+                ]) {
+                    sh '''
+                        chmod +x ./scripts/push.sh
+                        ./scripts/push.sh "$DOCKERHUB_USER" "$DOCKERHUB_PASS"
+                    '''
                 }
             }
         }
@@ -45,17 +46,20 @@ pipeline {
         stage('Terraform Init & Plan') {
             steps {
                 dir('terraform') {
-                    echo "🔧 Initializing Terraform..."
-                    sh 'terraform init -input=false'
+                    echo "🔧 Terraform Init & Plan..."
 
-                    echo "📄 Running Terraform plan..."
-                    withCredentials([string(credentialsId: 'ec2-key-name', variable: 'KEY_NAME')]) {
-                        sh """
+                    withCredentials([
+                        string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                        string(credentialsId: 'ec2-key-name', variable: 'TF_KEY_NAME')
+                    ]) {
+                        sh '''
+                            terraform --version
+                            terraform init -input=false
+
                             terraform plan -input=false -out=tfplan \
-                                -var 'aws_access_key=${AWS_KEY}' \
-                                -var 'aws_secret_key=${AWS_SECRET}' \
-                                -var 'key_name=${KEY_NAME}'
-                        """
+                              -var "key_name=$TF_KEY_NAME"
+                        '''
                     }
                 }
             }
@@ -64,11 +68,15 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 dir('terraform') {
-                    echo "🚀 Applying Terraform..."
-                    withCredentials([string(credentialsId: 'ec2-key-name', variable: 'KEY_NAME')]) {
-                        sh """
+                    echo "🚀 Terraform Apply..."
+
+                    withCredentials([
+                        string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                    ]) {
+                        sh '''
                             terraform apply -input=false -auto-approve tfplan
-                        """
+                        '''
                     }
                 }
             }
@@ -76,12 +84,13 @@ pipeline {
 
         stage('Deploy to AWS') {
             steps {
-                withEnv(["PATH+TOOLS=/usr/bin:/usr/local/bin"]) {
-                    sshagent(['ec2-ssh-key']) {
-                        echo "🚀 Deploying Docker containers on server..."
-                        sh 'chmod +x ./scripts/deploy.sh'
-                        sh './scripts/deploy.sh'
-                    }
+                echo "🚀 Deploying Docker containers on EC2..."
+
+                sshagent(['ec2-ssh-key']) {
+                    sh '''
+                        chmod +x ./scripts/deploy.sh
+                        ./scripts/deploy.sh
+                    '''
                 }
             }
         }
@@ -92,7 +101,7 @@ pipeline {
             echo "✅ CI/CD pipeline completed successfully!"
         }
         failure {
-            echo "❌ Pipeline failed. Check Jenkins console for details."
+            echo "❌ Pipeline failed. Check Jenkins console output."
         }
     }
 }
