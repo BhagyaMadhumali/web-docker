@@ -60,7 +60,7 @@ resource "aws_security_group" "web_sg" {
 resource "aws_instance" "web_server" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
-  key_name               = var.key_name      # Use your updated key 'updateone'
+  key_name               = var.key_name
   subnet_id              = aws_subnet.default_subnet.id
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
