@@ -65,27 +65,28 @@ pipeline {
                 }
             }
         }
-stage('Terraform Apply') {
-    steps{
-        withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: 'aws-creds',
-            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-        ]]) {
-            sh '''
-                export TF_VAR_aws_region=ap-south-1
-                export TF_VAR_key_name=updateone
-                terraform init -input=false
-                terraform apply -input=false -auto-approve tfplan
-                terraform output instance_public_ip
-            '''
+
+        stage('Terraform Apply') {
+            steps {
+                dir('terraform') {
+                    echo "🚀 Terraform Apply..."
+                    withCredentials([
+                        string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                    ]) {
+                        sh '''
+                            export TF_VAR_aws_region="ap-south-1"
+                            export TF_VAR_vpc_id="" # Empty to create default VPC
+                            export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
+                            export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
+                             export TF_VAR_key_name=updateone
+
+                            terraform apply -input=false -auto-approve tfplan
+                        '''
+                    }
+                }
+            }
         }
-
-    }
-    
-}
-
 
         stage('Deploy to AWS') {
             steps {
