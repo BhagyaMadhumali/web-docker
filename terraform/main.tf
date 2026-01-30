@@ -1,8 +1,14 @@
+provider "aws" {
+  region     = var.aws_region
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+}
+
 # Security Group for EC2
 resource "aws_security_group" "web_sg" {
   name        = var.security_group_name
   description = "Allow SSH and HTTP access"
-  
+
   ingress {
     from_port   = 22
     to_port     = 22
@@ -27,17 +33,12 @@ resource "aws_security_group" "web_sg" {
 
 # EC2 instance
 resource "aws_instance" "web_server" {
-  ami             = var.ami_id
-  instance_type   = var.instance_type
-  key_name        = var.key_name
-  security_groups = [aws_security_group.web_sg.name]
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   tags = {
     Name = "job-protal-webserver"
   }
-}
-
-# Output public IP
-output "instance_public_ip" {
-  value = aws_instance.web_server.public_ip
 }

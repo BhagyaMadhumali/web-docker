@@ -52,12 +52,14 @@ pipeline {
                         string(credentialsId: 'ec2-key-name', variable: 'TF_KEY_NAME')
                     ]) {
                         sh '''
-                            export TF_VAR_aws_region=us-east-1
-                            export TF_VAR_aws_access_key=$AWS_ACCESS_KEY_ID
-                            export TF_VAR_aws_secret_key=$AWS_SECRET_ACCESS_KEY
+                            export TF_VAR_aws_region="us-east-1"
+                            export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
+                            export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
+                            export TF_VAR_key_name="$TF_KEY_NAME"
+
                             terraform --version
                             terraform init -input=false
-                            terraform plan -input=false -out=tfplan -var "key_name=$TF_KEY_NAME"
+                            terraform plan -input=false -out=tfplan
                         '''
                     }
                 }
@@ -74,9 +76,11 @@ pipeline {
                         string(credentialsId: 'ec2-key-name', variable: 'TF_KEY_NAME')
                     ]) {
                         sh '''
-                            export TF_VAR_aws_region=us-east-1
-                            export TF_VAR_aws_access_key=$AWS_ACCESS_KEY_ID
-                            export TF_VAR_aws_secret_key=$AWS_SECRET_ACCESS_KEY
+                            export TF_VAR_aws_region="us-east-1"
+                            export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
+                            export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
+                            export TF_VAR_key_name="$TF_KEY_NAME"
+
                             terraform apply -input=false -auto-approve tfplan
                         '''
                     }
