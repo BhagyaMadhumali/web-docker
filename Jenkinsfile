@@ -55,7 +55,7 @@ pipeline {
                             export TF_VAR_vpc_id="" # Empty to create default VPC
                             export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
                             export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
-                            export TF_VAR_key_name="jobprotalwebserver"
+                            export TF_VAR_key_name="updateone"
 
                             terraform --version
                             terraform init -input=false
