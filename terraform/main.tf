@@ -47,7 +47,7 @@ resource "aws_security_group" "web_sg" {
 
 # EC2 instance
 resource "aws_instance" "web_server" {
-  ami                    = "ami-073130f74f5ffb161" # ✅ updated with your working AMI
+  ami                    = "ami-019715e0d74f695be" # ✅ updated with your working AMI
   instance_type          = var.instance_type
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.web_sg.id]
