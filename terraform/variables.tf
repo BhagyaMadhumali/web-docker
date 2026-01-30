@@ -1,12 +1,13 @@
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
-  default     = "us-east-1"
+  default     = "ap-south-1"
 }
 
 variable "ami_id" {
-  description = "AMI ID for EC2 instance"
+  description = "AMI ID for EC2 instance in Mumbai"
   type        = string
+  default     = "ami-0c02fb55956c7d316" # Amazon Linux 2 in ap-south-1
 }
 
 variable "instance_type" {
@@ -16,7 +17,7 @@ variable "instance_type" {
 }
 
 variable "key_name" {
-  description = "The name of the AWS key pair to use for EC2 instances"
+  description = "AWS key pair for EC2 instances"
   type        = string
 }
 
@@ -27,7 +28,7 @@ variable "security_group_name" {
 }
 
 variable "vpc_id" {
-  description = "The VPC ID where the security group will be created. Leave empty to create default VPC."
+  description = "VPC ID for the resources. Leave empty to create default VPC."
   type        = string
   default     = ""
 }

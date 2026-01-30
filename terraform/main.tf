@@ -2,7 +2,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Create a default VPC if vpc_id is not provided
+# Create default VPC if no VPC ID provided
 resource "aws_vpc" "default_vpc" {
   count                = var.vpc_id == "" ? 1 : 0
   cidr_block           = "10.0.0.0/16"
@@ -45,9 +45,9 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# EC2 instance
+# EC2 Instance
 resource "aws_instance" "web_server" {
-  ami                    = "ami-019715e0d74f695be" # ✅ updated with your working AMI
+  ami                    = var.ami_id
   instance_type          = var.instance_type
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.web_sg.id]
@@ -55,4 +55,10 @@ resource "aws_instance" "web_server" {
   tags = {
     Name = "job-protal-webserver"
   }
+}
+
+# Outputs
+output "instance_public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.web_server.public_ip
 }
