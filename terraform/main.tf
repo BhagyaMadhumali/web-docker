@@ -56,8 +56,3 @@ resource "aws_instance" "web_server" {
     Name = "job-protal-webserver"
   }
 }
-
-# Output public IP
-output "instance_public_ip" {
-  value = aws_instance.web_server.public_ip
-}
