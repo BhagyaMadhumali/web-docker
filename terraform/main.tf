@@ -1,11 +1,10 @@
 provider "aws" {
-  region     = var.aws_region
- 
+  region = var.aws_region  # make sure var.aws_region = "us-east-1"
 }
 
-# Security Group for EC2
-resource "aws_security_group" "web_sg" {
-  name        = var.security_group_name
+
+#resource "aws_security_group" "web_sg" {
+  name        = "job-protal-sg"
   description = "Allow SSH and HTTP access"
 
   ingress {
@@ -30,12 +29,13 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
+
 # EC2 instance
 resource "aws_instance" "web_server" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
   key_name               = var.key_name
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
+vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   tags = {
     Name = "job-protal-webserver"
