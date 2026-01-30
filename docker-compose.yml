@@ -10,13 +10,8 @@ services:
       - app-network
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: myapp-backend
+    image: bhagya122/my-backend1-image:latest
     container_name: backend
-    volumes:
-      - ./backend:/app
     ports:
       - "4000:4000"
     networks:
@@ -27,17 +22,11 @@ services:
       - PORT=4000
       - DB_URI=mongodb://mongodb:27017/mydb
       - JWT_SECRET=${JWT_SECRET}
-    command: ["npx", "nodemon", "index.js"]
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    image: myapp-frontend
+    image: bhagya122/my-frontend1-image:latest
     container_name: frontend
-    volumes:
-      - ./frontend:/app
     ports:
       - "3000:3000"
     networks:
