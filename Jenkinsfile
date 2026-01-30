@@ -66,7 +66,7 @@ pipeline {
             }
         }
 stage('Terraform Apply') {
-    dir('terraform') {
+    steps{
         withCredentials([[
             $class: 'AmazonWebServicesCredentialsBinding',
             credentialsId: 'aws-creds',
@@ -81,7 +81,9 @@ stage('Terraform Apply') {
                 terraform output instance_public_ip
             '''
         }
+
     }
+    
 }
 
 
