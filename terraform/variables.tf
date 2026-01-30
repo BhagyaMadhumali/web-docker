@@ -1,18 +1,7 @@
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
-}
-
-variable "aws_access_key" {
-  description = "AWS access key"
-  type        = string
-  sensitive   = true
-}
-
-variable "aws_secret_key" {
-  description = "AWS secret key"
-  type        = string
-  sensitive   = true
+  default     = "us-east-1"
 }
 
 variable "ami_id" {
@@ -23,6 +12,7 @@ variable "ami_id" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
+  default     = "t2.micro"
 }
 
 variable "key_name" {
@@ -33,4 +23,5 @@ variable "key_name" {
 variable "security_group_name" {
   description = "Security group name"
   type        = string
+  default     = "job-protal-sg"
 }
