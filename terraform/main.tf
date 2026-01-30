@@ -1,15 +1,12 @@
 provider "aws" {
-  region = var.aws_region
+  region     = var.aws_region
+ 
 }
 
-resource "random_id" "sg_suffix" {
-  byte_length = 2
-}
-
+# Security Group for EC2
 resource "aws_security_group" "web_sg" {
-  name        = "${var.security_group_name}-${random_id.sg_suffix.hex}"
+  name        = var.security_group_name
   description = "Allow SSH and HTTP access"
-  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 22
@@ -31,12 +28,9 @@ resource "aws_security_group" "web_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "job-protal-web-sg"
-  }
 }
 
+# EC2 instance
 resource "aws_instance" "web_server" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
