@@ -56,7 +56,7 @@ pipeline {
                             export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
                             export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
                             export TF_VAR_key_name="jobprotalwebserver"
-                            export TF_VAR_vpc_id="vpc-0abcd1234efgh5678"  # <-- replace with your actual VPC ID
+                            export TF_VAR_vpc_id="vpc-082722fbe85595cd4"  # <-- replace with your actual VPC ID
 
                             terraform --version
                             terraform init -input=false
@@ -80,7 +80,7 @@ pipeline {
                             export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
                             export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
                             export TF_VAR_key_name="jobprotalwebserver"
-                            export TF_VAR_vpc_id="vpc-0abcd1234efgh5678"  # <-- replace with your actual VPC ID
+                            export TF_VAR_vpc_id="vpc-082722fbe85595cd4"  # <-- replace with your actual VPC ID
 
                             terraform apply -input=false -auto-approve tfplan
                         '''
