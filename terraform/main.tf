@@ -13,6 +13,17 @@ resource "aws_vpc" "default_vpc" {
   }
 }
 
+# Create a default subnet in the VPC
+resource "aws_subnet" "default_subnet" {
+  vpc_id            = var.vpc_id != "" ? var.vpc_id : aws_vpc.default_vpc[0].id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "ap-south-1a"
+
+  tags = {
+    Name = "job-protal-subnet"
+  }
+}
+
 # Security Group
 resource "aws_security_group" "web_sg" {
   name        = var.security_group_name
@@ -49,11 +60,11 @@ resource "aws_security_group" "web_sg" {
 resource "aws_instance" "web_server" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
-  key_name               = var.key_name
+  key_name               = var.key_name      # Use your updated key 'updateone'
+  subnet_id              = aws_subnet.default_subnet.id
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
   tags = {
     Name = "job-protal-webserver"
   }
 }
-
