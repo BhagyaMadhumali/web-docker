@@ -18,6 +18,7 @@ variable "instance_type" {
 variable "key_name" {
   description = "The name of the AWS key pair to use for EC2 instances"
   type        = string
+  default     = "jobprotalwebserver"
 }
 
 variable "security_group_name" {

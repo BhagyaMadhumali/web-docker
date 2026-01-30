@@ -55,7 +55,8 @@ pipeline {
                             export TF_VAR_aws_region="us-east-1"
                             export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
                             export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
-                            export TF_VAR_key_name="$TF_KEY_NAME"
+                            export TF_VAR_key_name="jobprotalwebserver"
+
 
                             terraform --version
                             terraform init -input=false
@@ -71,34 +72,35 @@ pipeline {
                 dir('terraform') {
                     echo "🚀 Terraform Apply..."
                     withCredentials([
-                        string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
-                        string(credentialsId: 'ec2-key-name', variable: 'TF_KEY_NAME')
-                    ]) {
-                        sh '''
-                            export TF_VAR_aws_region="us-east-1"
-                            export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
-                            export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
-                            export TF_VAR_key_name="$TF_KEY_NAME"
+    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+]) {
+    sh '''
+    export TF_VAR_aws_region="us-east-1"
+    export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
+    export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
+    export TF_VAR_key_name="jobprotalwebserver"
 
-                            terraform apply -input=false -auto-approve tfplan
-                        '''
-                    }
+    terraform apply -input=false -auto-approve tfplan
+'''
+
+}
+
                 }
             }
         }
 
         stage('Deploy to AWS') {
-            steps {
-                echo "🚀 Deploying Docker containers on EC2..."
-                sshagent(['ec2-ssh-key']) {
-                    sh '''
-                        chmod +x ./scripts/deploy.sh
-                        ./scripts/deploy.sh
-                    '''
-                }
-            }
+    steps {
+        sshagent(['EC2 Server SSH Key']) {  // this is just for SSH
+            sh '''
+                chmod +x ./scripts/deploy.sh
+                ./scripts/deploy.sh
+            '''
         }
+    }
+}
+
     }
 
     post {
