@@ -89,15 +89,18 @@ pipeline {
         }
 
         stage('Deploy to AWS') {
-            steps {
-                sshagent(['ec2-updateone-key']) {
-                    sh '''
-                        chmod +x ./scripts/deploy.sh
-                        ./scripts/deploy.sh
-                    '''
-                }
-            }
+    steps {
+        // Use SSH agent with your Jenkins stored credentials
+        sshagent(['ec2-updateone-key']) {
+            // Make deploy script executable and run it
+            sh '''
+                chmod +x ./scripts/deploy.sh
+                ./scripts/deploy.sh
+            '''
         }
+    }
+}
+
 
     }
 
