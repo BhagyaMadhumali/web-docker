@@ -18,11 +18,15 @@ variable "instance_type" {
 variable "key_name" {
   description = "The name of the AWS key pair to use for EC2 instances"
   type        = string
-  
 }
 
 variable "security_group_name" {
   description = "Security group name"
   type        = string
   default     = "job-protal-sg"
+}
+
+variable "vpc_id" {
+  description = "The VPC ID where the security group will be created"
+  type        = string
 }

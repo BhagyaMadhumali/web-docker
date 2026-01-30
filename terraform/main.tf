@@ -3,22 +3,22 @@ provider "aws" {
 }
 
 
-#resource "aws_security_group" "web_sg" {
-  name        = "job-protal-sg"
+resource "aws_security_group" "web_sg" {
+  name        = var.security_group_name
   description = "Allow SSH and HTTP access"
+  vpc_id      = var.vpc_id  # You must provide the VPC ID
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = [
+      { from_port=22, to_port=22, protocol="tcp", cidr_blocks=["0.0.0.0/0"] },
+      { from_port=80, to_port=80, protocol="tcp", cidr_blocks=["0.0.0.0/0"] }
+    ]
+    content {
+      from_port   = ingress.value.from_port
+      to_port     = ingress.value.to_port
+      protocol    = ingress.value.protocol
+      cidr_blocks = ingress.value.cidr_blocks
+    }
   }
 
   egress {

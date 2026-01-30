@@ -48,15 +48,15 @@ pipeline {
                     echo "🔧 Terraform Init & Plan..."
                     withCredentials([
                         string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
-                        string(credentialsId: 'ec2-key-name', variable: 'TF_KEY_NAME')
+                        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
                     ]) {
                         sh '''
+                            # Export Terraform variables
                             export TF_VAR_aws_region="us-east-1"
                             export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
                             export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
                             export TF_VAR_key_name="jobprotalwebserver"
-
+                            export TF_VAR_vpc_id="vpc-0abcd1234efgh5678"  # <-- replace with your actual VPC ID
 
                             terraform --version
                             terraform init -input=false
@@ -72,34 +72,33 @@ pipeline {
                 dir('terraform') {
                     echo "🚀 Terraform Apply..."
                     withCredentials([
-    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
-]) {
-    sh '''
-    export TF_VAR_aws_region="us-east-1"
-    export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
-    export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
-    export TF_VAR_key_name="jobprotalwebserver"
+                        string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                    ]) {
+                        sh '''
+                            export TF_VAR_aws_region="us-east-1"
+                            export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
+                            export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
+                            export TF_VAR_key_name="jobprotalwebserver"
+                            export TF_VAR_vpc_id="vpc-0abcd1234efgh5678"  # <-- replace with your actual VPC ID
 
-    terraform apply -input=false -auto-approve tfplan
-'''
-
-}
-
+                            terraform apply -input=false -auto-approve tfplan
+                        '''
+                    }
                 }
             }
         }
 
         stage('Deploy to AWS') {
-    steps {
-        sshagent(['EC2 Server SSH Key']) {  // this is just for SSH
-            sh '''
-                chmod +x ./scripts/deploy.sh
-                ./scripts/deploy.sh
-            '''
+            steps {
+                sshagent(['EC2 Server SSH Key']) {
+                    sh '''
+                        chmod +x ./scripts/deploy.sh
+                        ./scripts/deploy.sh
+                    '''
+                }
+            }
         }
-    }
-}
 
     }
 
