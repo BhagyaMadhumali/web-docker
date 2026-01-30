@@ -4,8 +4,8 @@ provider "aws" {
 
 # Create a default VPC if vpc_id is not provided
 resource "aws_vpc" "default_vpc" {
-  count               = var.vpc_id == "" ? 1 : 0
-  cidr_block          = "10.0.0.0/16"
+  count                = var.vpc_id == "" ? 1 : 0
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
@@ -47,7 +47,7 @@ resource "aws_security_group" "web_sg" {
 
 # EC2 instance
 resource "aws_instance" "web_server" {
-  ami                    = var.ami_id
+  ami                    = "ami-073130f74f5ffb161" # ✅ updated with your working AMI
   instance_type          = var.instance_type
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.web_sg.id]

@@ -75,6 +75,7 @@ stage('Terraform Apply') {
                 string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
             ]) {
                 sh '''
+
                     export TF_VAR_aws_region="eu-north-1"
                     export TF_VAR_vpc_id="vpc-082722fbe85595cd4"
                     export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
