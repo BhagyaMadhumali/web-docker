@@ -87,19 +87,25 @@ pipeline {
                 }
             }
         }
-
-        stage('Deploy to AWS') {
+stage('Deploy to AWS') {
     steps {
-        // Use SSH agent with your Jenkins stored credentials
         sshagent(['ec2-updateone-key']) {
-            // Make deploy script executable and run it
-            sh '''
-                chmod +x ./scripts/deploy.sh
-                ./scripts/deploy.sh
-            '''
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USER',
+                    passwordVariable: 'DOCKERHUB_PASS'
+                )
+            ]) {
+                sh '''
+                    chmod +x ./scripts/deploy.sh
+                    ./scripts/deploy.sh "$DOCKERHUB_USER" "$DOCKERHUB_PASS"
+                '''
+            }
         }
     }
 }
+
 
 
     }
