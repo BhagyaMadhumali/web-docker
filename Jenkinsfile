@@ -90,7 +90,7 @@ pipeline {
 
         stage('Deploy to AWS') {
             steps {
-                sshagent(['EC2 Server SSH Key']) {
+                sshagent(['ec2-updateone-key']) {
                     sh '''
                         chmod +x ./scripts/deploy.sh
                         ./scripts/deploy.sh
