@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Add terraform + docker to PATH properly
         PATH = "/usr/local/bin:/usr/bin:/bin"
     }
 
@@ -47,18 +46,18 @@ pipeline {
             steps {
                 dir('terraform') {
                     echo "🔧 Terraform Init & Plan..."
-
                     withCredentials([
                         string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
                         string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
                         string(credentialsId: 'ec2-key-name', variable: 'TF_KEY_NAME')
                     ]) {
                         sh '''
+                            export TF_VAR_aws_region=us-east-1
+                            export TF_VAR_aws_access_key=$AWS_ACCESS_KEY_ID
+                            export TF_VAR_aws_secret_key=$AWS_SECRET_ACCESS_KEY
                             terraform --version
                             terraform init -input=false
-
-                            terraform plan -input=false -out=tfplan \
-                              -var "key_name=$TF_KEY_NAME"
+                            terraform plan -input=false -out=tfplan -var "key_name=$TF_KEY_NAME"
                         '''
                     }
                 }
@@ -69,12 +68,15 @@ pipeline {
             steps {
                 dir('terraform') {
                     echo "🚀 Terraform Apply..."
-
                     withCredentials([
                         string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-                        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                        string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                        string(credentialsId: 'ec2-key-name', variable: 'TF_KEY_NAME')
                     ]) {
                         sh '''
+                            export TF_VAR_aws_region=us-east-1
+                            export TF_VAR_aws_access_key=$AWS_ACCESS_KEY_ID
+                            export TF_VAR_aws_secret_key=$AWS_SECRET_ACCESS_KEY
                             terraform apply -input=false -auto-approve tfplan
                         '''
                     }
@@ -85,7 +87,6 @@ pipeline {
         stage('Deploy to AWS') {
             steps {
                 echo "🚀 Deploying Docker containers on EC2..."
-
                 sshagent(['ec2-ssh-key']) {
                     sh '''
                         chmod +x ./scripts/deploy.sh
@@ -105,4 +106,3 @@ pipeline {
         }
     }
 }
-//jen
