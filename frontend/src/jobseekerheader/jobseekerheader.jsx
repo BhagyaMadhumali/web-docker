@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./jobseekerheader.css";
+import '../jobseekerheader/jobseekerheader.css';
+
 
 const Jobseekerheader = () => {
   const navigate = useNavigate();
