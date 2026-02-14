@@ -52,7 +52,7 @@ pipeline {
                     ]) {
                         sh '''
                             export TF_VAR_aws_region="ap-south-1"
-                            export TF_VAR_vpc_id="" # Empty to create default VPC
+                            export TF_VAR_vpc_id=""
                             export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
                             export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
                             export TF_VAR_key_name="updateone"
@@ -76,10 +76,10 @@ pipeline {
                     ]) {
                         sh '''
                             export TF_VAR_aws_region="ap-south-1"
-                            export TF_VAR_vpc_id="" # Empty to create default VPC
+                            export TF_VAR_vpc_id=""
                             export TF_VAR_aws_access_key="$AWS_ACCESS_KEY_ID"
                             export TF_VAR_aws_secret_key="$AWS_SECRET_ACCESS_KEY"
-                             export TF_VAR_key_name=updateone
+                            export TF_VAR_key_name="updateone"
 
                             terraform apply -input=false -auto-approve tfplan
                         '''
@@ -87,27 +87,28 @@ pipeline {
                 }
             }
         }
-stage('Deploy to AWS') {
-    steps {
-        sshagent(['ec2-updateone-key']) {
-            withCredentials([
-                usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKERHUB_USER',
-                    passwordVariable: 'DOCKERHUB_PASS'
-                )
-            ]) {
-                sh '''
-                    chmod +x ./scripts/deploy.sh
-                    ./scripts/deploy.sh "$DOCKERHUB_USER" "$DOCKERHUB_PASS"
-                '''
+
+        stage('Deploy to AWS') {
+            steps {
+                sshagent(['ec2-updateone-key']) {
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'dockerhub-creds',
+                            usernameVariable: 'DOCKERHUB_USER',
+                            passwordVariable: 'DOCKERHUB_PASS'
+                        ),
+                        string(credentialsId: 'PORT', variable: 'PORT'),
+                        string(credentialsId: 'MONGO_URI', variable: 'MONGO_URI'),
+                        string(credentialsId: 'JWT_SECRET', variable: 'JWT_SECRET')
+                    ]) {
+                        sh '''
+                            chmod +x ./scripts/deploy.sh
+                            ./scripts/deploy.sh "$DOCKERHUB_USER" "$DOCKERHUB_PASS"
+                        '''
+                    }
+                }
             }
         }
-    }
-}
-
-
-
     }
 
     post {
