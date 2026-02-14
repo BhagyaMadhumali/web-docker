@@ -16,7 +16,7 @@ const Hero = () => {
 
       <div className="overlay">
         <div className="hero-content">
-          <h1 className="hero-title">Find Your Dream Job Today...</h1>
+          <h1 className="hero-title">Madhumali W.B</h1>
           <p className="hero-subtitle">
             Explore thousands of job opportunities and connect with top employers.
           </p>
