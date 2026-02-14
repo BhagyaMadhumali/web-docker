@@ -5,7 +5,11 @@ import Employersidebar from "../employersidebar/employersidebar";
 import Employerheader from "../employerheader/employerheader";
 import "./managejob.css";
 
+
+
 const ManageJob = () => {
+  const [applications, setApplications] = useState([]);
+
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Jobseekerheader from "../jobseekerheader/jobseekerheader";
-import "./jobseeker-advanced.css";
+import "./jobseeker.css";
 
 const JobSeeker = () => {
   const [jobs, setJobs] = useState([]);
