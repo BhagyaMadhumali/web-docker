@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   mongodb:
     image: mongo:6.0
@@ -8,6 +10,7 @@ services:
       - "27017:27017"
     networks:
       - app-network
+    restart: unless-stopped
 
   backend:
     image: bhagya122/my-backend1-image:latest
@@ -18,10 +21,11 @@ services:
       - app-network
     depends_on:
       - mongodb
-    environment:
-      - PORT=4000
-      - DB_URI=mongodb://mongodb:27017/mydb
-      - JWT_SECRET=${JWT_SECRET}
+
+    # ✅ load env from backend folder
+    env_file:
+      - ./backend/.env
+
     restart: unless-stopped
 
   frontend:
@@ -31,6 +35,8 @@ services:
       - "3000:3000"
     networks:
       - app-network
+    depends_on:
+      - backend
     restart: unless-stopped
 
 networks:
